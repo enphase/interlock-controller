@@ -12,6 +12,10 @@ class MetricNut(NamedTuple):
     thickness: float
     clearance_dia: float
 
+    def diameter(self) -> float:
+        """Returns the circumscribed diameter (distance across corners)."""
+        return self.across_flats / (math.sqrt(3) / 2)
+
 
 # Nominal dimensions from ISO/DIN standards for M3 hex nuts
 M3_NUT = MetricNut(thread_size="M3", across_flats=5.5, thickness=2.4, clearance_dia=3.2)
@@ -31,7 +35,7 @@ def apply_hex_nut_tool(
     The pocket is cut blind, and the clearance hole uses cutThruAll.
     """
     actual_clearance_dia = nut.clearance_dia + tol_clearance * 2
-    circumscribed_dia = (nut.across_flats + tol_flats * 2) / math.sqrt(3) / 2
+    circumscribed_dia = (nut.across_flats + tol_flats * 2) / (math.sqrt(3) / 2)
 
     # Hex nut pocket (blind cut from the current workplane face)
     res = wp.pushPoints(locations).polygon(6, circumscribed_dia).cutBlind(-pocket_depth)
