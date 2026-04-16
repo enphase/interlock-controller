@@ -12,20 +12,20 @@ from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
 # The plate occupies Z=[0, plate_thickness].
 
 # Plate dimensions
-cutout_length = 216.0
+cutout_length = 116.0
 cutout_width = 40.0
 cutout_radius = 12.7  # 0.5 inches
 flange_margin = 5.0
 
-plate_thickness = 4.0
+plate_thickness = 5.0
 
 # Hex nut flanges
 hex_nut = M3_NUT
-screw_pattern_length = 228.0
+screw_pattern_length = cutout_length + 12.0
 screw_pattern_width = 24.0
 nut_depth = hex_nut.thickness + 0.2
 
-hex_flange_margin = 3.5
+hex_flange_margin = 3.0
 
 # Emboss Parameters (Extruded upwards from the inside face)
 emboss_thickness = 0.4
@@ -35,11 +35,26 @@ version_text = "v1.0"
 
 # M12 Connectors
 num_connectors = 4
+connector_spacing = 25.0
 
-connector_spacing = cutout_length / (num_connectors + 1)
 connector_locations = [
-    (connector_spacing * (i + 1) - cutout_length / 2, 0) for i in range(num_connectors)
+    (cutout_length / 2 - connector_spacing * (i + 0.5), 0)
+    for i in range(num_connectors)
 ]
+
+
+def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sketch:
+    """
+    Creates a reusable 2D sketch for a D-shaped flange.
+    It is a round rect on the outside (180 degrees) and a square/rect on the inside.
+    dir_x: 1 points right (+x), -1 points left (-x)
+    """
+    return (
+        cq.Sketch()
+        .circle(radius)
+        .push([(-dir_x * extension / 2, 0)])
+        .rect(extension, radius * 2)
+    )
 
 
 def build_connector_plate() -> cq.Workplane:
@@ -82,9 +97,9 @@ def build_connector_plate() -> cq.Workplane:
     plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
 
     # 4. Cut the hex nut slots and clearance holes using the tool modifier
-    # We start from the top face (>Z) to pocket downwards, then cut clearance through all
+    # We start from the bottom face (<Z) to pocket the nut upward, then cut clearance through all
     plate = apply_hex_nut_tool(
-        plate.faces(">Z").workplane(), screw_locations, hex_nut, nut_depth
+        plate.faces("<Z").workplane(offset=-3.0), screw_locations, hex_nut
     )
 
     # 5. Add Embosses
@@ -156,23 +171,6 @@ def build_connector_plate() -> cq.Workplane:
     plate = plate.union(text_emboss)
 
     return plate
-
-
-# --- Tool Profiles & Modifiers ---
-
-
-def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sketch:
-    """
-    Creates a reusable 2D sketch for a D-shaped flange.
-    It is a round rect on the outside (180 degrees) and a square/rect on the inside.
-    dir_x: 1 points right (+x), -1 points left (-x)
-    """
-    return (
-        cq.Sketch()
-        .circle(radius)
-        .push([(-dir_x * extension / 2, 0)])
-        .rect(extension, radius * 2)
-    )
 
 
 # --- Export ---

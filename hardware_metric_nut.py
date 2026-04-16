@@ -25,7 +25,6 @@ def apply_hex_nut_tool(
     wp: cq.Workplane,
     locations: List[Tuple[float, float]],
     nut: MetricNut,
-    pocket_depth: float,
     *,
     tol_clearance: float = 0.2,
     tol_flats: float = 0.0,  # reduced tolerance for snug fit
@@ -38,7 +37,9 @@ def apply_hex_nut_tool(
     circumscribed_dia = (nut.across_flats + tol_flats * 2) / (math.sqrt(3) / 2)
 
     # Hex nut pocket (blind cut from the current workplane face)
-    res = wp.pushPoints(locations).polygon(6, circumscribed_dia).cutBlind(-pocket_depth)
+    res = (
+        wp.pushPoints(locations).polygon(6, circumscribed_dia).cutBlind(-nut.thickness)
+    )
 
     # Clearance hole (cut through all)
     res = res.pushPoints(locations).circle(actual_clearance_dia / 2).cutThruAll()
