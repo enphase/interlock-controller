@@ -1,8 +1,7 @@
 import cadquery as cq
-from typing import List, Tuple
 
-from hardware_metric_nut import MetricNut, M3_NUT, apply_hex_nut_tool
 from hardware_m12 import apply_m12_cutouts
+from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
 
 # --- Parameters ---
 
