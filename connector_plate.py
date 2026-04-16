@@ -14,16 +14,13 @@ from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
 # Plate dimensions
 cutout_length = 216.0
 cutout_width = 40.0
-cutout_radius = 12.7 # 0.5 inches
-flange_margin = 5.0  
+cutout_radius = 12.7  # 0.5 inches
+flange_margin = 5.0
 
-main_plate_length = cutout_length + 2 * flange_margin
-main_plate_width = cutout_width + 2 * flange_margin
 plate_thickness = 4.0
-edge_radius = cutout_radius + flange_margin # External corners
 
 # Hex nut flanges
-hex_flange_margin = 3.5 
+hex_flange_margin = 3.5
 hex_flange_radius = (M3_NUT.across_flats / 0.866025) / 2 + hex_flange_margin
 
 # Emboss Parameters (Extruded upwards from the inside face)
@@ -37,23 +34,23 @@ num_connectors = 4
 
 connector_spacing = cutout_length / (num_connectors + 1)
 connector_locations = [
-    (connector_spacing * (i + 1) - cutout_length / 2, 0)
-    for i in range(num_connectors)
+    (connector_spacing * (i + 1) - cutout_length / 2, 0) for i in range(num_connectors)
 ]
 
 # Screws and Hex Nuts
 screw_pattern_length = 228.0
 screw_pattern_width = 24.0
-m3_nut_depth = M3_NUT.thickness + 0.2 
+m3_nut_depth = M3_NUT.thickness + 0.2
 
 screw_locations = [
     (screw_pattern_length / 2, screw_pattern_width / 2),
     (screw_pattern_length / 2, -screw_pattern_width / 2),
     (-screw_pattern_length / 2, screw_pattern_width / 2),
-    (-screw_pattern_length / 2, -screw_pattern_width / 2)
+    (-screw_pattern_length / 2, -screw_pattern_width / 2),
 ]
 
 # --- Tool Profiles & Modifiers ---
+
 
 def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sketch:
     """
@@ -68,22 +65,25 @@ def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sk
         .rect(extension, radius * 2)
     )
 
+
 # --- Build the CAD Model ---
 
 # 1. Create the main plate
 plate = (
     cq.Workplane("XY")
-    .rect(main_plate_length, main_plate_width)
+    .rect(cutout_length + 2 * flange_margin, cutout_width + 2 * flange_margin)
     .extrude(plate_thickness)
     .edges("|Z")
-    .fillet(edge_radius)
+    .fillet(cutout_radius + flange_margin)
 )
 
 # 2. Add D-flanges for the hex nuts
 for loc in screw_locations:
     dir_x = 1 if loc[0] > 0 else -1
     # Extension ensures it deeply overlaps into the main plate for unioning
-    sketch = make_d_flange_sketch(hex_flange_radius, hex_flange_radius + flange_margin, dir_x)
+    sketch = make_d_flange_sketch(
+        hex_flange_radius, hex_flange_radius + flange_margin, dir_x
+    )
     flange_wp = (
         cq.Workplane("XY")
         .center(loc[0], loc[1])
@@ -94,10 +94,7 @@ for loc in screw_locations:
 
 # 3. Cut the M12 connector holes using the reusable sketch profile
 # We start from the top face (>Z) and cut through all downwards
-plate = apply_m12_cutouts(
-    plate.faces(">Z").workplane(), 
-    connector_locations
-)
+plate = apply_m12_cutouts(plate.faces(">Z").workplane(), connector_locations)
 
 # Add 1mm 45-degree chamfer to the M12 holes on the external face (Z=0)
 for loc in connector_locations:
@@ -108,21 +105,18 @@ for loc in connector_locations:
 # 4. Cut the M3 hex nut slots and clearance holes using the tool modifier
 # We start from the top face (>Z) to pocket downwards, then cut clearance through all
 plate = apply_hex_nut_tool(
-    plate.faces(">Z").workplane(),
-    screw_locations,
-    M3_NUT,
-    m3_nut_depth
+    plate.faces(">Z").workplane(), screw_locations, M3_NUT, m3_nut_depth
 )
 
 # 5. Add Embosses
 # 5a. Cutout Outline Emboss
 outer_w = cutout_length + emboss_width
 outer_h = cutout_width + emboss_width
-outer_r = cutout_radius + emboss_width/2
+outer_r = cutout_radius + emboss_width / 2
 
 inner_w = cutout_length - emboss_width
 inner_h = cutout_width - emboss_width
-inner_r = cutout_radius - emboss_width/2
+inner_r = cutout_radius - emboss_width / 2
 
 cutout_emboss_base = (
     cq.Workplane("XY")
@@ -135,7 +129,9 @@ cutout_emboss_base = (
 
 cutout_emboss_hole = (
     cq.Workplane("XY")
-    .workplane(offset=plate_thickness - 0.1) # Offset lower to avoid coincident face issues
+    .workplane(
+        offset=plate_thickness - 0.1
+    )  # Offset lower to avoid coincident face issues
     .rect(inner_w, inner_h)
     .extrude(emboss_thickness + 0.2)
     .edges("|Z")
@@ -150,9 +146,7 @@ m12_outer_dia = m12_emboss_dia + emboss_width
 m12_inner_dia = m12_emboss_dia - emboss_width
 
 m12_emboss_sketch = (
-    cq.Sketch()
-    .circle(m12_outer_dia / 2)
-    .circle(m12_inner_dia / 2, mode='s')
+    cq.Sketch().circle(m12_outer_dia / 2).circle(m12_inner_dia / 2, mode="s")
 )
 
 m12_emboss = (
@@ -165,14 +159,20 @@ m12_emboss = (
 plate = plate.union(m12_emboss)
 
 # 5c. Version Text Emboss
-text_x = main_plate_length / 2 - 2.0
-text_y = -main_plate_width / 2 + 1.5
+text_x = cutout_length / 2 - 2.0
+text_y = -cutout_width / 2 + 1.5
 
 text_emboss = (
     cq.Workplane("XY")
     .workplane(offset=plate_thickness)
     .center(text_x, text_y)
-    .text(version_text, fontsize=4.0, distance=emboss_thickness, halign="right", valign="bottom")
+    .text(
+        version_text,
+        fontsize=4.0,
+        distance=emboss_thickness,
+        halign="right",
+        valign="bottom",
+    )
 )
 plate = plate.union(text_emboss)
 
