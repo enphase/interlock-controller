@@ -19,12 +19,10 @@ PLATE_THICKNESS = 5.0
 
 # Hex nut flanges
 HEX_NUT = M3_NUT
-cutout_length = 116.0
-screw_pattern_length = cutout_length + 12.0
-screw_pattern_width = 24.0
 NUT_DEPTH = HEX_NUT.thickness + 0.2
-
 HEX_FLANGE_MARGIN = 3.0
+
+M12_CONNECTOR_SPACING = 25.0
 
 # Emboss Parameters (Extruded upwards from the inside face)
 EMBOSS_THICKNESS = 0.4
@@ -69,6 +67,7 @@ def build_base_plate(
     )
 
     # 2. Add D-flanges for the hex nuts
+    screw_pattern_width = 24.0
     screw_pattern_length = length + screw_pattern_length_offset
     screw_locations = [
         (screw_pattern_length / 2, screw_pattern_width / 2),
@@ -163,10 +162,9 @@ def build_bottom_cutout_plate() -> cq.Workplane:
 
     # M12 Connectors
     num_connectors = 2
-    connector_spacing = 25.0
 
     connector_locations = [
-        (cutout_length / 2 - connector_spacing * (i + 0.5), 0)
+        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0)
         for i in range(num_connectors)
     ]
 
@@ -178,7 +176,7 @@ def build_bottom_cutout_plate() -> cq.Workplane:
         width=cutout_width,
         cutout_radius=cutout_radius,
         add_cutout_emboss=True,
-        version_text="v1.0",
+        version_text="BOT v1.0",
     )
 
     # 5. Cut the M12 connector holes using the reusable sketch profile
@@ -216,10 +214,99 @@ def build_bottom_cutout_plate() -> cq.Workplane:
     return plate
 
 
+def build_top_cutout_plate() -> cq.Workplane:
+    cutout_length = 116.0
+    cutout_width = 40.0
+    cutout_radius = 12.7  # 0.5 inches
+
+    # M12 Connectors
+    num_connectors = 4
+
+    connector_locations = [
+        (M12_CONNECTOR_SPACING * ((num_connectors / 2) - i - 0.5), 0)
+        for i in range(num_connectors)
+    ]
+
+    # 5. Cut the M12 connector holes using the reusable sketch profile
+    # We start from the bottom face (<Z) and cut through all downwards
+    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
+    plate = build_base_plate(
+        length=cutout_length,
+        width=cutout_width,
+        cutout_radius=cutout_radius,
+        add_cutout_emboss=True,
+        version_text="TOP v1.0",
+    )
+
+    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+
+    # 7. Add Embosses
+    # 7a. M12 Circular Emboss
+    m12_outer_dia = m12_emboss_dia + EMBOSS_WIDTH
+    m12_inner_dia = m12_emboss_dia - EMBOSS_WIDTH
+
+    m12_emboss_sketch = (
+        cq.Sketch().circle(m12_outer_dia / 2).circle(m12_inner_dia / 2, mode="s")
+    )
+
+    m12_emboss = (
+        cq.Workplane("XY")
+        .workplane(offset=PLATE_THICKNESS)
+        .pushPoints(connector_locations)
+        .placeSketch(m12_emboss_sketch)
+        .extrude(EMBOSS_THICKNESS)
+    )
+    plate = plate.union(m12_emboss)
+
+    return plate
+
+
+def build_side_cutout_plate() -> cq.Workplane:
+    cutout_length = 216.0
+    cutout_width = 40.0
+    cutout_radius = 12.7  # 0.5 inches
+
+    # M12 Connectors
+    connector_locations = [(-cutout_length / 2 + M12_CONNECTOR_SPACING * 1.5, 0)]
+
+    # 5. Cut the M12 connector holes using the reusable sketch profile
+    # We start from the bottom face (<Z) and cut through all downwards
+    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
+    plate = build_base_plate(
+        length=cutout_length,
+        width=cutout_width,
+        cutout_radius=cutout_radius,
+        add_cutout_emboss=True,
+        version_text="SIDE v1.0",
+    )
+
+    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+
+    # 7. Add Embosses
+    # 7a. M12 Circular Emboss
+    m12_outer_dia = m12_emboss_dia + EMBOSS_WIDTH
+    m12_inner_dia = m12_emboss_dia - EMBOSS_WIDTH
+
+    m12_emboss_sketch = (
+        cq.Sketch().circle(m12_outer_dia / 2).circle(m12_inner_dia / 2, mode="s")
+    )
+
+    m12_emboss = (
+        cq.Workplane("XY")
+        .workplane(offset=PLATE_THICKNESS)
+        .pushPoints(connector_locations)
+        .placeSketch(m12_emboss_sketch)
+        .extrude(EMBOSS_THICKNESS)
+    )
+    plate = plate.union(m12_emboss)
+
+    return plate
+
+
 # --- Export ---
 if __name__ == "__main__":
     print("Exporting...")
-    plate = build_bottom_cutout_plate()
-    cq.exporters.export(plate, "connector_plate.stl")
-    cq.exporters.export(plate, "connector_plate.step")
+    cq.exporters.export(build_top_cutout_plate(), "top_plate.stl")
+    cq.exporters.export(build_bottom_cutout_plate(), "bot_plate.stl")
+    cq.exporters.export(build_side_cutout_plate(), "side_plate.stl")
     print("Done!")
