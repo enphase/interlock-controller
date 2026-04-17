@@ -1,5 +1,6 @@
 import cadquery as cq
 
+from hardware_719w import apply_719w_cutouts
 from hardware_m12 import apply_m12_cutouts
 from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
 
@@ -34,13 +35,16 @@ m12_emboss_dia = 18.0
 version_text = "v1.0"
 
 # M12 Connectors
-num_connectors = 4
+num_connectors = 2
 connector_spacing = 25.0
 
 connector_locations = [
     (cutout_length / 2 - connector_spacing * (i + 0.5), 0)
     for i in range(num_connectors)
 ]
+
+# AC Power Entry Module
+power_locations = [(-cutout_length / 2 + 25.0, 0)]
 
 
 def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sketch:
@@ -106,8 +110,17 @@ def build_connector_plate() -> cq.Workplane:
         chamfer=0.5,
     )
 
-    # 5. Add Embosses
-    # 5a. Cutout Outline Emboss
+    # 5. Cut the 719W AC Power Entry Module cutout
+    plate = apply_719w_cutouts(
+        plate.faces("<Z"),
+        power_locations,
+        hex_nut,
+        depth=3.0,
+        chamfer=0.5,
+    )
+
+    # 6. Add Embosses
+    # 6a. Cutout Outline Emboss
     outer_w = cutout_length + emboss_width
     outer_h = cutout_width + emboss_width
     outer_r = cutout_radius + emboss_width / 2
@@ -139,7 +152,7 @@ def build_connector_plate() -> cq.Workplane:
     cutout_emboss = cutout_emboss_base.cut(cutout_emboss_hole)
     plate = plate.union(cutout_emboss)
 
-    # 5b. M12 Circular Emboss
+    # 6b. M12 Circular Emboss
     m12_outer_dia = m12_emboss_dia + emboss_width
     m12_inner_dia = m12_emboss_dia - emboss_width
 
@@ -156,7 +169,7 @@ def build_connector_plate() -> cq.Workplane:
     )
     plate = plate.union(m12_emboss)
 
-    # 5c. Version Text Emboss
+    # 6c. Version Text Emboss
     text_x = cutout_length / 2 - 2.0
     text_y = -cutout_width / 2 + 1.5
 
