@@ -15,11 +15,11 @@ from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
 # Plate dimensions
 FLANGE_MARGIN = 5.0
 
-PLATE_THICKNESS = 5.0
+PLATE_THICKNESS = 4.0
 
 # Hex nut flanges
 HEX_NUT = M3_NUT
-NUT_DEPTH = HEX_NUT.thickness + 0.2
+NUT_DEPTH = 2.5
 HEX_FLANGE_MARGIN = 3.0
 
 M12_CONNECTOR_SPACING = 25.0
