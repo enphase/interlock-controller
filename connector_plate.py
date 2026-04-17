@@ -170,8 +170,8 @@ def build_connector_plate() -> cq.Workplane:
     plate = plate.union(m12_emboss)
 
     # 6c. Version Text Emboss
-    text_x = cutout_length / 2 - 2.0
-    text_y = -cutout_width / 2 + 1.5
+    text_x = cutout_length / 2 - flange_margin - cutout_radius
+    text_y = -cutout_width / 2 + flange_margin
 
     text_emboss = (
         cq.Workplane("XY")
