@@ -13,38 +13,23 @@ from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
 # The plate occupies Z=[0, plate_thickness].
 
 # Plate dimensions
-cutout_length = 116.0
-cutout_width = 40.0
-cutout_radius = 12.7  # 0.5 inches
-flange_margin = 5.0
+FLANGE_MARGIN = 5.0
 
-plate_thickness = 5.0
+PLATE_THICKNESS = 5.0
 
 # Hex nut flanges
-hex_nut = M3_NUT
+HEX_NUT = M3_NUT
+cutout_length = 116.0
 screw_pattern_length = cutout_length + 12.0
 screw_pattern_width = 24.0
-nut_depth = hex_nut.thickness + 0.2
+NUT_DEPTH = HEX_NUT.thickness + 0.2
 
-hex_flange_margin = 3.0
+HEX_FLANGE_MARGIN = 3.0
 
 # Emboss Parameters (Extruded upwards from the inside face)
-emboss_thickness = 0.4
-emboss_width = 1.0
+EMBOSS_THICKNESS = 0.4
+EMBOSS_WIDTH = 1.0
 m12_emboss_dia = 18.0
-version_text = "v1.0"
-
-# M12 Connectors
-num_connectors = 2
-connector_spacing = 25.0
-
-connector_locations = [
-    (cutout_length / 2 - connector_spacing * (i + 0.5), 0)
-    for i in range(num_connectors)
-]
-
-# AC Power Entry Module
-power_locations = [(-cutout_length / 2 + 25.0, 0)]
 
 
 def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sketch:
@@ -61,100 +46,159 @@ def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sk
     )
 
 
-def build_connector_plate() -> cq.Workplane:
-    # --- Build the CAD Model ---
-
+def build_base_plate(
+    length: float,
+    width: float,
+    cutout_radius: float,
+    *,
+    screw_pattern_length_offset: float = 12.0,
+    screw_pattern_width: float = 24.0,
+    add_cutout_emboss: bool = True,
+    version_text: str = "",
+) -> cq.Workplane:
+    """
+    Builds the base plate with screw flanges and optional cutout outline emboss.
+    """
     # 1. Create the main plate
     plate = (
         cq.Workplane("XY")
-        .rect(cutout_length + 2 * flange_margin, cutout_width + 2 * flange_margin)
-        .extrude(plate_thickness)
+        .rect(length + 2 * FLANGE_MARGIN, width + 2 * FLANGE_MARGIN)
+        .extrude(PLATE_THICKNESS)
         .edges("|Z")
-        .fillet(cutout_radius + flange_margin)
+        .fillet(cutout_radius + FLANGE_MARGIN)
     )
 
     # 2. Add D-flanges for the hex nuts
+    screw_pattern_length = length + screw_pattern_length_offset
     screw_locations = [
         (screw_pattern_length / 2, screw_pattern_width / 2),
         (screw_pattern_length / 2, -screw_pattern_width / 2),
         (-screw_pattern_length / 2, screw_pattern_width / 2),
         (-screw_pattern_length / 2, -screw_pattern_width / 2),
     ]
-    hex_flange_radius = (hex_nut.diameter() / 2) + hex_flange_margin
+    hex_flange_radius = (HEX_NUT.diameter() / 2) + HEX_FLANGE_MARGIN
     for loc in screw_locations:
         dir_x = 1 if loc[0] > 0 else -1
         # Extension ensures it deeply overlaps into the main plate for unioning
         sketch = make_d_flange_sketch(
-            hex_flange_radius, hex_flange_radius + flange_margin, dir_x
+            hex_flange_radius, hex_flange_radius + FLANGE_MARGIN, dir_x
         )
         flange_wp = (
             cq.Workplane("XY")
             .center(loc[0], loc[1])
             .placeSketch(sketch)
-            .extrude(plate_thickness)
+            .extrude(PLATE_THICKNESS)
         )
         plate = plate.union(flange_wp)
 
-    # 3. Cut the M12 connector holes using the reusable sketch profile
-    # We start from the bottom face (<Z) and cut through all downwards
-    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
-    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
-
-    # 4. Cut the hex nut slots and clearance holes using the tool modifier
+    # 3. Cut the hex nut slots and clearance holes using the tool modifier
     # We start from the bottom face (<Z) to pocket the nut upward, then cut clearance through all
     plate = apply_hex_nut_tool(
         plate.faces("<Z"),
         screw_locations,
-        hex_nut,
-        3.0,
+        HEX_NUT,
+        depth=NUT_DEPTH,
         chamfer=0.5,
     )
 
-    # 5. Cut the 719W AC Power Entry Module cutout
+    # 4. Add Cutout Outline Emboss
+    if add_cutout_emboss:
+        outer_w = length + EMBOSS_WIDTH
+        outer_h = width + EMBOSS_WIDTH
+        outer_r = cutout_radius + EMBOSS_WIDTH / 2
+
+        inner_w = length - EMBOSS_WIDTH
+        inner_h = width - EMBOSS_WIDTH
+        inner_r = cutout_radius - EMBOSS_WIDTH / 2
+
+        cutout_emboss_base = (
+            cq.Workplane("XY")
+            .workplane(offset=PLATE_THICKNESS)
+            .rect(outer_w, outer_h)
+            .extrude(EMBOSS_THICKNESS)
+            .edges("|Z")
+            .fillet(outer_r)
+        )
+
+        cutout_emboss_hole = (
+            cq.Workplane("XY")
+            .workplane(
+                offset=PLATE_THICKNESS - 0.1
+            )  # Offset lower to avoid coincident face issues
+            .rect(inner_w, inner_h)
+            .extrude(EMBOSS_THICKNESS + 0.2)
+            .edges("|Z")
+            .fillet(inner_r)
+        )
+
+        cutout_emboss = cutout_emboss_base.cut(cutout_emboss_hole)
+        plate = plate.union(cutout_emboss)
+
+    # 5. Version Text Emboss
+    if version_text:
+        text_x = length / 2 - FLANGE_MARGIN - cutout_radius
+        text_y = -width / 2 + FLANGE_MARGIN
+
+        text_emboss = (
+            cq.Workplane("XY")
+            .workplane(offset=PLATE_THICKNESS)
+            .center(text_x, text_y)
+            .text(
+                version_text,
+                fontsize=4.0,
+                distance=EMBOSS_THICKNESS,
+                halign="right",
+                valign="bottom",
+            )
+        )
+        plate = plate.union(text_emboss)
+
+    return plate
+
+
+def build_bottom_cutout_plate() -> cq.Workplane:
+    cutout_length = 116.0
+    cutout_width = 40.0
+    cutout_radius = 12.7  # 0.5 inches
+
+    # M12 Connectors
+    num_connectors = 2
+    connector_spacing = 25.0
+
+    connector_locations = [
+        (cutout_length / 2 - connector_spacing * (i + 0.5), 0)
+        for i in range(num_connectors)
+    ]
+
+    # AC Power Entry Module
+    power_locations = [(-cutout_length / 2 + 25.0, 0)]
+
+    plate = build_base_plate(
+        length=cutout_length,
+        width=cutout_width,
+        cutout_radius=cutout_radius,
+        add_cutout_emboss=True,
+        version_text="v1.0",
+    )
+
+    # 5. Cut the M12 connector holes using the reusable sketch profile
+    # We start from the bottom face (<Z) and cut through all downwards
+    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
+    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+
+    # 6. Cut the 719W AC Power Entry Module cutout
     plate = apply_719w_cutouts(
         plate.faces("<Z"),
         power_locations,
-        hex_nut,
-        depth=3.0,
+        HEX_NUT,
+        depth=NUT_DEPTH,
         chamfer=0.5,
     )
 
-    # 6. Add Embosses
-    # 6a. Cutout Outline Emboss
-    outer_w = cutout_length + emboss_width
-    outer_h = cutout_width + emboss_width
-    outer_r = cutout_radius + emboss_width / 2
-
-    inner_w = cutout_length - emboss_width
-    inner_h = cutout_width - emboss_width
-    inner_r = cutout_radius - emboss_width / 2
-
-    cutout_emboss_base = (
-        cq.Workplane("XY")
-        .workplane(offset=plate_thickness)
-        .rect(outer_w, outer_h)
-        .extrude(emboss_thickness)
-        .edges("|Z")
-        .fillet(outer_r)
-    )
-
-    cutout_emboss_hole = (
-        cq.Workplane("XY")
-        .workplane(
-            offset=plate_thickness - 0.1
-        )  # Offset lower to avoid coincident face issues
-        .rect(inner_w, inner_h)
-        .extrude(emboss_thickness + 0.2)
-        .edges("|Z")
-        .fillet(inner_r)
-    )
-
-    cutout_emboss = cutout_emboss_base.cut(cutout_emboss_hole)
-    plate = plate.union(cutout_emboss)
-
-    # 6b. M12 Circular Emboss
-    m12_outer_dia = m12_emboss_dia + emboss_width
-    m12_inner_dia = m12_emboss_dia - emboss_width
+    # 7. Add Embosses
+    # 7a. M12 Circular Emboss
+    m12_outer_dia = m12_emboss_dia + EMBOSS_WIDTH
+    m12_inner_dia = m12_emboss_dia - EMBOSS_WIDTH
 
     m12_emboss_sketch = (
         cq.Sketch().circle(m12_outer_dia / 2).circle(m12_inner_dia / 2, mode="s")
@@ -162,30 +206,12 @@ def build_connector_plate() -> cq.Workplane:
 
     m12_emboss = (
         cq.Workplane("XY")
-        .workplane(offset=plate_thickness)
+        .workplane(offset=PLATE_THICKNESS)
         .pushPoints(connector_locations)
         .placeSketch(m12_emboss_sketch)
-        .extrude(emboss_thickness)
+        .extrude(EMBOSS_THICKNESS)
     )
     plate = plate.union(m12_emboss)
-
-    # 6c. Version Text Emboss
-    text_x = cutout_length / 2 - flange_margin - cutout_radius
-    text_y = -cutout_width / 2 + flange_margin
-
-    text_emboss = (
-        cq.Workplane("XY")
-        .workplane(offset=plate_thickness)
-        .center(text_x, text_y)
-        .text(
-            version_text,
-            fontsize=4.0,
-            distance=emboss_thickness,
-            halign="right",
-            valign="bottom",
-        )
-    )
-    plate = plate.union(text_emboss)
 
     return plate
 
@@ -193,7 +219,7 @@ def build_connector_plate() -> cq.Workplane:
 # --- Export ---
 if __name__ == "__main__":
     print("Exporting...")
-    plate = build_connector_plate()
+    plate = build_bottom_cutout_plate()
     cq.exporters.export(plate, "connector_plate.stl")
     cq.exporters.export(plate, "connector_plate.step")
     print("Done!")

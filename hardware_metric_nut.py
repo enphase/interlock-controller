@@ -70,7 +70,7 @@ def apply_hex_nut_tool(
         res.copyWorkplane(wp)
         .pushPoints(locations)
         .circle(actual_clearance_dia / 2)
-        .cutBlind(-depth)
+        .cutThruAll()
     )
 
     return res
