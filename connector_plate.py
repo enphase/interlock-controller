@@ -99,7 +99,11 @@ def build_connector_plate() -> cq.Workplane:
     # 4. Cut the hex nut slots and clearance holes using the tool modifier
     # We start from the bottom face (<Z) to pocket the nut upward, then cut clearance through all
     plate = apply_hex_nut_tool(
-        plate.faces("<Z").workplane(offset=-3.0), screw_locations, hex_nut
+        plate.faces("<Z"),
+        screw_locations,
+        hex_nut,
+        3.0,
+        chamfer=0.5,
     )
 
     # 5. Add Embosses
