@@ -30,12 +30,14 @@ def apply_hex_nut_tool(
     tol_clearance: float = 0.2,
     tol_flats: float = 0.0,  # reduced tolerance for snug fit
     chamfer: float = 0.0,
+    angle: float = 0.0,
 ):
     """
     Applies a hex nut pocket and clearance hole to a given Workplane at specified locations.
     The pocket is cut blind starting from `depth` inside the given Workplane.
     The clearance hole uses cutThruAll.
     An optional chamfer can be added to the clearance hole at the Workplane surface.
+    An optional angle can rotate the hex nut around its center.
     """
     actual_clearance_dia = nut.clearance_dia + tol_clearance * 2
     circumscribed_dia = (nut.across_flats + tol_flats * 2) / (math.sqrt(3) / 2)
@@ -51,12 +53,16 @@ def apply_hex_nut_tool(
             .cutBlind(chamfer, taper=-45)
         )
 
+    # Use a sketch to allow rotating the hex nut profile
+    # regularPolygon(angle=30) aligns the corners to the X axis matching wp.polygon default
+    nut_sketch = cq.Sketch().regularPolygon(circumscribed_dia / 2, 6, angle=30 + angle)
+
     # Hex nut pocket (blind cut upwards from `depth` distance from the workplane face)
     res = (
         res.copyWorkplane(wp)
         .workplane(offset=-depth)
         .pushPoints(locations)
-        .polygon(6, circumscribed_dia)
+        .placeSketch(nut_sketch)
         .cutBlind(-nut.thickness)
     )
     # Clearance hole (cut through all)

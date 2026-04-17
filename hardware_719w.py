@@ -52,6 +52,7 @@ def apply_719w_cutouts(
         nut,
         depth=depth,
         chamfer=chamfer,
+        angle=30.0,
     )
 
     return res
