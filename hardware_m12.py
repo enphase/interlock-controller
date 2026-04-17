@@ -18,22 +18,17 @@ def apply_m12_cutouts(
         .rect(PANEL_CUTOUT_FLATS + tol * 2, PANEL_CUTOUT_DIA + tol * 2, mode="i")
     )
 
-    res = wp.tag("wp")
+    res = wp
 
     # Create a 1mm 45-degree chamfer by cutting a tapered hole from 1mm inside the face, expanding outwards
     res = (
-        res.workplaneFromTagged("wp")
+        res.copyWorkplane(wp)
         .workplane(offset=-1.0)
         .pushPoints(locations)
         .placeSketch(sketch)
         .cutBlind(1.0, taper=-45)
     )
 
-    res = (
-        res.workplaneFromTagged("wp")
-        .pushPoints(locations)
-        .placeSketch(sketch)
-        .cutThruAll()
-    )
+    res = res.copyWorkplane(wp).pushPoints(locations).placeSketch(sketch).cutThruAll()
 
     return res

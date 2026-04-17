@@ -40,11 +40,11 @@ def apply_hex_nut_tool(
     actual_clearance_dia = nut.clearance_dia + tol_clearance * 2
     circumscribed_dia = (nut.across_flats + tol_flats * 2) / (math.sqrt(3) / 2)
 
-    res = wp.tag("wp")
+    res = wp
     if chamfer > 0:
         # Create chamfer by cutting a tapered hole from `chamfer` inside the face, expanding outwards
         res = (
-            res.workplaneFromTagged("wp")
+            res.copyWorkplane(wp)
             .workplane(offset=-chamfer)
             .pushPoints(locations)
             .circle(actual_clearance_dia / 2)
@@ -53,7 +53,7 @@ def apply_hex_nut_tool(
 
     # Hex nut pocket (blind cut upwards from `depth` distance from the workplane face)
     res = (
-        res.workplaneFromTagged("wp")
+        res.copyWorkplane(wp)
         .workplane(offset=-depth)
         .pushPoints(locations)
         .polygon(6, circumscribed_dia)
@@ -61,7 +61,7 @@ def apply_hex_nut_tool(
     )
     # Clearance hole (cut through all)
     res = (
-        res.workplaneFromTagged("wp")
+        res.copyWorkplane(wp)
         .pushPoints(locations)
         .circle(actual_clearance_dia / 2)
         .cutBlind(-depth)
