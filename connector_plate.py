@@ -3,6 +3,7 @@ import cadquery as cq
 from hardware_719w import apply_719w_cutouts
 from hardware_m12 import apply_m12_cutouts
 from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
+from hardware_towerlight import apply_tower_light_cutouts
 
 # --- Parameters ---
 
@@ -18,9 +19,11 @@ FLANGE_MARGIN = 4.0
 # Hex nut flanges
 HEX_NUT = M3_NUT
 NUT_DEPTH = 1.5
-HEX_FLANGE_RADIUS = 4.0
+HEX_FLANGE_RADIUS = 8.0
 
 M12_CONNECTOR_SPACING = 25.0
+
+VERSION = "v1.1"
 
 # Emboss Parameters (Extruded upwards from the inside face)
 EMBOSS_THICKNESS = 0.4
@@ -47,8 +50,8 @@ def build_base_plate(
     cutout_radius: float,
     thickness: float = 2.5,
     *,
-    screw_pattern_length_offset: float = 0.0,
-    screw_pattern_width_offset: float = 0.0,
+    screw_pattern_length_offset: float = 4.0,
+    screw_pattern_width_offset: float = -4.0,
     add_cutout_emboss: bool = True,
     version_text: str = "",
 ) -> cq.Workplane:
@@ -77,7 +80,11 @@ def build_base_plate(
     for loc in screw_locations:
         dir_x = 1 if loc[0] > 0 else -1
         # Extension ensures it deeply overlaps into the main plate for unioning
-        sketch = make_d_flange_sketch(hex_flange_radius, cutout_radius, dir_x)
+        sketch = make_d_flange_sketch(
+            hex_flange_radius,
+            cutout_radius + screw_pattern_length_offset,
+            dir_x,
+        )
         flange_wp = (
             cq.Workplane("XY")
             .center(loc[0], loc[1])
@@ -172,7 +179,7 @@ def build_bottom_cutout_plate() -> cq.Workplane:
         width=cutout_width,
         cutout_radius=cutout_radius,
         add_cutout_emboss=True,
-        version_text="BOT v1.0",
+        version_text=f"BOT {VERSION}",
     )
 
     # 5. Cut the M12 connector holes using the reusable sketch profile
@@ -213,7 +220,7 @@ def build_top_cutout_plate() -> cq.Workplane:
         width=cutout_width,
         cutout_radius=cutout_radius,
         add_cutout_emboss=True,
-        version_text="TOP v1.0",
+        version_text=f"TOP {VERSION}",
     )
 
     plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
@@ -237,10 +244,16 @@ def build_side_cutout_plate() -> cq.Workplane:
         width=cutout_width,
         cutout_radius=cutout_radius,
         add_cutout_emboss=True,
-        version_text="SIDE v1.0",
+        version_text=f"SIDE {VERSION}",
     )
 
     plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+
+    plate = apply_tower_light_cutouts(
+        plate.faces("<Z").workplane(),
+        (cutout_length / 2 - cutout_radius - 18, 0),
+        depth=NUT_DEPTH,
+    )
 
     return plate
 
