@@ -26,7 +26,7 @@ def apply_m12_cutouts(
     res = (
         res.copyWorkplane(wp)
         .pushPoints(locations)
-        .circle(PANEL_CUTOUT_DIA / 2 + tol)
+        .circle(PANEL_CUTOUT_DIA / 2 + tol + 2)
         .cutBlind(-2.0, taper=45)
     )
 

@@ -14,6 +14,9 @@ from hardware_towerlight import apply_tower_light_cutouts
 # The plate occupies Z=[0, plate_thickness].
 
 # Plate dimensions
+CUTOUT_WIDTH = 40.0
+CUTOUT_RADIUS = 10.0
+
 FLANGE_MARGIN = 4.0
 
 # Hex nut flanges
@@ -21,13 +24,13 @@ HEX_NUT = M3_NUT
 NUT_DEPTH = 1.5
 HEX_FLANGE_RADIUS = 8.0
 
-M12_CONNECTOR_SPACING = 25.0
+M12_CONNECTOR_SPACING = 22.0
 
-VERSION = "v1.1"
+VERSION = "v1.2"
 
 # Emboss Parameters (Extruded upwards from the inside face)
 EMBOSS_THICKNESS = 0.4
-EMBOSS_WIDTH = 1.0
+EMBOSS_WIDTH = 0.8
 
 
 def make_d_flange_sketch(radius: float, extension: float, dir_x: float) -> cq.Sketch:
@@ -147,8 +150,9 @@ def build_base_plate(
             .center(text_x, text_y)
             .text(
                 version_text,
-                fontsize=4.0,
+                fontsize=6.0,
                 distance=EMBOSS_THICKNESS,
+                kind="bold",
                 halign="right",
                 valign="bottom",
             )
@@ -160,24 +164,21 @@ def build_base_plate(
 
 def build_bottom_cutout_plate() -> cq.Workplane:
     cutout_length = 116.0
-    cutout_width = 40.0
-    cutout_radius = 12.7  # 0.5 inches
 
     # M12 Connectors
-    num_connectors = 2
-
+    num_connectors = 3
     connector_locations = [
-        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0)
+        (-cutout_length / 2 + M12_CONNECTOR_SPACING * (i + 0.5), 0)
         for i in range(num_connectors)
     ]
 
     # AC Power Entry Module
-    power_locations = [(-cutout_length / 2 + 25.0, 0)]
+    power_locations = [(cutout_length / 2 - 25.0, 0)]
 
     plate = build_base_plate(
         length=cutout_length,
-        width=cutout_width,
-        cutout_radius=cutout_radius,
+        width=CUTOUT_WIDTH,
+        cutout_radius=CUTOUT_RADIUS,
         add_cutout_emboss=True,
         version_text=f"BOT {VERSION}",
     )
@@ -201,14 +202,11 @@ def build_bottom_cutout_plate() -> cq.Workplane:
 
 def build_top_cutout_plate() -> cq.Workplane:
     cutout_length = 116.0
-    cutout_width = 40.0
-    cutout_radius = 12.7  # 0.5 inches
 
     # M12 Connectors
-    num_connectors = 4
-
+    num_connectors = 2
     connector_locations = [
-        (M12_CONNECTOR_SPACING * ((num_connectors / 2) - i - 0.5), 0)
+        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0)
         for i in range(num_connectors)
     ]
 
@@ -217,43 +215,45 @@ def build_top_cutout_plate() -> cq.Workplane:
     # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = build_base_plate(
         length=cutout_length,
-        width=cutout_width,
-        cutout_radius=cutout_radius,
+        width=CUTOUT_WIDTH,
+        cutout_radius=CUTOUT_RADIUS,
         add_cutout_emboss=True,
         version_text=f"TOP {VERSION}",
     )
 
     plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
 
+    plate = apply_tower_light_cutouts(
+        plate.faces("<Z").workplane(),
+        (-(cutout_length / 2 - CUTOUT_RADIUS - 18), 0),
+        depth=NUT_DEPTH,
+    )
+
     return plate
 
 
 def build_side_cutout_plate() -> cq.Workplane:
     cutout_length = 216.0
-    cutout_width = 40.0
-    cutout_radius = 12.7  # 0.5 inches
 
     # M12 Connectors
-    connector_locations = [(-cutout_length / 2 + M12_CONNECTOR_SPACING * 1.5, 0)]
+    num_connectors = 4
+    connector_locations = [
+        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0)
+        for i in range(num_connectors)
+    ]
 
     # 5. Cut the M12 connector holes using the reusable sketch profile
     # We start from the bottom face (<Z) and cut through all downwards
     # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = build_base_plate(
         length=cutout_length,
-        width=cutout_width,
-        cutout_radius=cutout_radius,
+        width=CUTOUT_WIDTH,
+        cutout_radius=CUTOUT_RADIUS,
         add_cutout_emboss=True,
         version_text=f"SIDE {VERSION}",
     )
 
     plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
-
-    plate = apply_tower_light_cutouts(
-        plate.faces("<Z").workplane(),
-        (cutout_length / 2 - cutout_radius - 18, 0),
-        depth=NUT_DEPTH,
-    )
 
     return plate
 
