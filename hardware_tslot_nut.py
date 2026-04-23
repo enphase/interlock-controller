@@ -31,7 +31,7 @@ PROFILE_4545 = TSlotProfile(
     slot_depth=6.0,
     track_width=20.0,
     track_depth=13.0,
-    arm_thickness=2.0,
+    arm_thickness=3.0,
 )
 
 
@@ -67,14 +67,18 @@ def build_tslot_nut(
     track_w = profile.track_width - clearance
     flange_d = nut_depth_past_neck + nut.thickness
 
-    flange_to_slot_center = (
+    # Calculate the chamfer, the horizontal distance to inset the flange outer edges
+    # The distance from the flange depth to the profile center is the same as the flange width to
+    # the diagonal profile centerline
+    flange_to_profile_center = (
         profile.overall_width / 2
         - profile.slot_depth
         - nut_depth_past_neck
         - nut.thickness
     )
-    flange_max_w = flange_to_slot_center - (
-        profile.arm_thickness + clearance
+    # subtract out the horizontal projection of the arm thickness in its quadrant to get the maximim width
+    flange_max_w = flange_to_profile_center - (
+        profile.arm_thickness / 2 + clearance
     ) * math.sqrt(2)
     # The chamfer is the horizontal distance from the track edge to the flange
     chamfer = max(track_w / 2 - flange_max_w, 0)
