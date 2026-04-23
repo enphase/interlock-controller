@@ -64,7 +64,7 @@ def build_tslot_nut(
     # Calculate dimensions with clearance
     slot_w = profile.slot_width - clearance
     slot_d = profile.slot_depth + clearance
-    track_w = profile.track_width - clearance
+    flange_w = profile.track_width - clearance
     flange_d = nut_depth_past_neck + nut.thickness
 
     # Calculate the chamfer, the horizontal distance to inset the flange outer edges
@@ -80,8 +80,8 @@ def build_tslot_nut(
     flange_max_w = flange_to_profile_center - (
         profile.arm_thickness / 2 + clearance
     ) * math.sqrt(2)
-    # The chamfer is the horizontal distance from the track edge to the flange
-    chamfer = max(track_w / 2 - flange_max_w, 0)
+    # The chamfer is how much this cuts in from the track width
+    chamfer = max(flange_w / 2 - flange_max_w, 0)
 
     # Build half the 2D profile in XY plane, then mirror
     half_profile = (
@@ -94,9 +94,9 @@ def build_tslot_nut(
                 (slot_w / 2, 0),
                 (slot_w / 2, slot_d),
                 # Right side of flange
-                (track_w / 2, slot_d),
-                (track_w / 2, slot_d + flange_d - chamfer),
-                (track_w / 2 - chamfer, slot_d + flange_d),
+                (flange_w / 2, slot_d),
+                (flange_w / 2, slot_d + flange_d - chamfer),
+                (flange_w / 2 - chamfer, slot_d + flange_d),
                 # Back to centerline
                 (0, slot_d + flange_d),
             ]
