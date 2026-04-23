@@ -48,10 +48,9 @@ def apply_hex_nut_tool(
         # Create chamfer by cutting a tapered hole from `chamfer` inside the face, expanding outwards
         res = (
             res.copyWorkplane(wp)
-            .workplane(offset=-chamfer)
             .pushPoints(locations)
-            .circle(actual_clearance_dia / 2)
-            .cutBlind(chamfer, taper=-45)
+            .circle(actual_clearance_dia / 2 + chamfer)
+            .cutBlind(-chamfer, taper=45)
         )
 
     # Use a sketch to allow rotating the hex nut profile
