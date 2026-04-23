@@ -6,19 +6,32 @@ from hardware_metric_nut import M4_NUT, MetricNut, apply_hex_nut_tool
 
 
 class TSlotProfile(NamedTuple):
+    """Defines the dimensions of a T-slot extrusion profile.
+
+    Args:
+        overall_width: Total width of the T-slot profile
+        slot_width: Width of the narrow slot opening
+        slot_depth: Depth of the narrow slot (neck) section
+        track_width: Width of the wider track section
+        track_depth: Total depth from outer edge to back of track (inclusive of slot_depth)
+        arm_thickness: Diagonal thickness of the angled arm connecting slot to track
+    """
+
+    overall_width: float
     slot_width: float
+    slot_depth: float
     track_width: float
     track_depth: float
-    neck_depth: float
     arm_thickness: float
 
 
 PROFILE_4545 = TSlotProfile(
+    overall_width=45.0,
     slot_width=10.0,
+    slot_depth=6.0,
     track_width=20.0,
-    track_depth=6.0,
-    neck_depth=6.0,
-    arm_thickness=3.0,
+    track_depth=13.0,
+    arm_thickness=2.0,
 )
 
 
@@ -29,22 +42,42 @@ def build_tslot_nut(
     clearance: float = 0.2,
     interference: float = 0.2,
     nut_depth_past_neck: float = 2.0,
-    screw_entry_chamfer=0.5,
+    screw_entry_chamfer: float = 0.5,
 ) -> cq.Workplane:
+    """Build a T-slot nut for mounting into T-slot extrusion profiles.
+
+    The nut is designed to be 3D printed in a standing orientation (extruded along Z).
+    The Y=0 plane represents the outer edge of the T-slot profile.
+
+    Args:
+        profile: T-slot profile dimensions
+        nut: Metric hex nut specifications
+        length: Length of the T-slot nut body (Z direction)
+        clearance: Uniform clearance to subtract from profile dimensions for fit
+        interference: Reserved for future spring feature implementation
+        nut_depth_past_neck: How far past the slot neck the hex nut pocket extends
+        screw_entry_chamfer: Chamfer size for screw entry hole
+
+    Returns:
+        CadQuery workplane with the T-slot nut body
+    """
     # Calculate dimensions with clearance
     slot_w = profile.slot_width - clearance
+    slot_d = profile.slot_depth + clearance
     track_w = profile.track_width - clearance
-    neck_d = profile.neck_depth - clearance
     flange_d = nut_depth_past_neck + nut.thickness
 
-    # Chamfer dimensions for the flange back corners
-    chamfer_x = profile.arm_thickness
-    chamfer_y = min(profile.arm_thickness, flange_d - 0.1)
-
-    back_w = track_w - 2 * chamfer_x
-    if back_w < slot_w:
-        back_w = slot_w
-        chamfer_x = (track_w - back_w) / 2
+    flange_to_slot_center = (
+        profile.overall_width / 2
+        - profile.slot_depth
+        - nut_depth_past_neck
+        - nut.thickness
+    )
+    flange_max_w = flange_to_slot_center - (
+        profile.arm_thickness + clearance
+    ) * math.sqrt(2)
+    # The chamfer is the horizontal distance from the track edge to the flange
+    chamfer = max(track_w / 2 - flange_max_w, 0)
 
     # Build half the 2D profile in XY plane, then mirror
     half_profile = (
@@ -55,17 +88,17 @@ def build_tslot_nut(
                 (0, 0),
                 # Right side of neck
                 (slot_w / 2, 0),
-                (slot_w / 2, neck_d),
+                (slot_w / 2, slot_d),
                 # Right side of flange
-                (track_w / 2, neck_d),
-                (track_w / 2, neck_d + flange_d - chamfer_y),
-                (back_w / 2, neck_d + flange_d),
+                (track_w / 2, slot_d),
+                (track_w / 2, slot_d + flange_d - chamfer),
+                (track_w / 2 - chamfer, slot_d + flange_d),
                 # Back to centerline
-                (0, neck_d + flange_d),
+                (0, slot_d + flange_d),
             ]
         )
         .close()
-        .mirror(mirrorPlane="YZ")
+        # .mirror(mirrorPlane="YZ")
         .extrude(length)
     )
 
@@ -77,7 +110,7 @@ def build_tslot_nut(
         wp=wp_y0,
         locations=nut_locs,
         nut=nut,
-        depth=neck_d + nut_depth_past_neck,
+        depth=slot_d + nut_depth_past_neck,
         angle=30.0,
         chamfer=screw_entry_chamfer,
     )
