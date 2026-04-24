@@ -127,41 +127,17 @@ def build_tslot_nut(
     spring_y_start = profile.track_depth - clearance - clearance - spring_thickness
     spring_chamfer = chamfer  # account for truncated bottom from clearance
 
-    spring_base = (
-        cq.Workplane("XY")
-        .polyline(
-            [
-                # Start at the edge of the spring
-                (spring_height / 2 + spring_thickness, flange_y_start),
-                # Right side of flange
-                (flange_w / 2, flange_y_start),
-                (flange_w / 2, spring_y_end - spring_chamfer),
-                (flange_w / 2 - spring_chamfer, spring_y_end),
-                # Back to start
-                (spring_height / 2 + spring_thickness, spring_y_end),
-            ]
-        )
-        .close()
-        .extrude(spring_height)
-    )
-    body = body.union(spring_base)
+    # allow room for the spring to deflect inward, with 2x clearance for face-to-face
+    recess_y_start = spring_y_start - spring_interference * 1.5 - clearance * 2
 
-    # allocate at least spring_interference * 1.5 (plus two clearances for face-to-face clearance)
-    # for the spring to fit into
     spring_recess = (
         cq.Workplane("XY")
         .polyline(
             [
+                (-spring_height / 2 - clearance * 2, recess_y_start),
+                (flange_w / 2, recess_y_start),
+                (flange_w / 2, spring_y_end),
                 (-spring_height / 2 - clearance * 2, spring_y_end),
-                (spring_height / 2 + spring_thickness, spring_y_end),
-                (
-                    spring_height / 2 + spring_thickness,
-                    spring_y_start - spring_interference * 1.5 - clearance * 2,
-                ),
-                (
-                    -spring_height / 2 - clearance * 2,
-                    spring_y_start - spring_interference * 1.5 - clearance * 2,
-                ),
             ]
         )
         .close()
@@ -169,14 +145,20 @@ def build_tslot_nut(
     )
     body = body.cut(spring_recess)
 
+    inner_x_diag = flange_w / 2 - spring_chamfer - spring_thickness * (math.sqrt(2) - 1)
+    inner_y_diag = spring_y_end - spring_chamfer - spring_thickness * (math.sqrt(2) - 1)
     spring_arm = (
         cq.Workplane("XY")
         .polyline(
             [
-                (spring_height / 2 + spring_thickness, spring_y_start),
+                (flange_w / 2 - spring_thickness, flange_y_start),
+                (flange_w / 2 - spring_thickness, inner_y_diag),
+                (inner_x_diag, spring_y_start),
                 (-spring_height / 2, spring_y_start),
                 (-spring_height / 2, spring_y_end),
-                (spring_height / 2 + spring_thickness, spring_y_end),
+                (flange_w / 2 - spring_chamfer, spring_y_end),
+                (flange_w / 2, spring_y_end - spring_chamfer),
+                (flange_w / 2, flange_y_start),
             ]
         )
         .close()
