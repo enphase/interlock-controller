@@ -141,9 +141,26 @@ def build_tslot_nut(
             ]
         )
         .close()
-        .extrude(spring_height + clearance * 2)
+        .extrude(spring_height)
     )
     body = body.cut(spring_recess)
+
+    # this cuts out a higher clearance area where the spring is expected to deflect more
+    # TODO implement this cleaner, this currently creates overhangs
+    # spring_recess2 = (
+    #     cq.Workplane("XY")
+    #     .polyline(
+    #         [
+    #             (-spring_height / 2 - clearance * 2, recess_y_start),
+    #             (+spring_height / 2 + clearance * 2, recess_y_start),
+    #             (+spring_height / 2 + clearance * 2, spring_y_end),
+    #             (-spring_height / 2 - clearance * 2, spring_y_end),
+    #         ]
+    #     )
+    #     .close()
+    #     .extrude(spring_height + clearance * 2)
+    # )
+    # body = body.cut(spring_recess2)
 
     inner_x_diag = flange_w / 2 - spring_chamfer - spring_thickness * (math.sqrt(2) - 1)
     inner_y_diag = spring_y_end - spring_chamfer - spring_thickness * (math.sqrt(2) - 1)
