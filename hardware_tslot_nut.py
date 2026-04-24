@@ -50,9 +50,9 @@ def build_tslot_nut(
     clearance: float = 0.2,
     nut_depth_past_neck: float = 2.0,  # effectively wall thickness
     screw_entry_chamfer: float = 0.5,
-    spring_thickness: float = 2.0,
+    spring_thickness: float = 2.5,
     spring_height: float = 6.0,
-    spring_interference: float = 1.0,
+    spring_interference: float = 1.5,
 ) -> cq.Workplane:
     """Build a T-slot nut for mounting into T-slot extrusion profiles.
 
@@ -70,10 +70,13 @@ def build_tslot_nut(
     Returns:
         CadQuery workplane with the T-slot nut body
     """
+    INTERFERENCE_NUB_ANGLE_DEG = 30
+
     # Calculate dimensions with clearance
     neck_w = profile.slot_width - clearance * 2
     flange_w = profile.track_width - clearance * 2
-    flange_y_start = profile.slot_depth  # y-coord at which flange starts
+    # neck is short by 2x clearance to allow clamp fit
+    flange_y_start = profile.slot_depth - clearance * 2
     flange_d = nut_depth_past_neck + nut.thickness
     flange_y_end = flange_y_start + flange_d
 
@@ -117,9 +120,9 @@ def build_tslot_nut(
         chamfer=screw_entry_chamfer,
     )
 
-    spring_y_end = profile.track_depth - clearance
-    spring_y_start = profile.track_depth - clearance - spring_thickness
-    spring_chamfer = chamfer - clearance  # account for truncated bottom from clearance
+    spring_y_end = profile.track_depth - clearance - clearance
+    spring_y_start = profile.track_depth - clearance - clearance - spring_thickness
+    spring_chamfer = chamfer  # account for truncated bottom from clearance
 
     spring_recess = (
         cq.Workplane("XY")
@@ -129,11 +132,11 @@ def build_tslot_nut(
                 (spring_height / 2 + spring_thickness, spring_y_end),
                 (
                     spring_height / 2 + spring_thickness,
-                    spring_y_end - spring_thickness * 2 - clearance * 2,
+                    spring_y_start - spring_interference - clearance * 2,
                 ),
                 (
                     -spring_height / 2 - clearance * 2,
-                    spring_y_end - spring_thickness * 2 - clearance * 2,
+                    spring_y_start - spring_interference - clearance * 2,
                 ),
             ]
         )
@@ -175,6 +178,25 @@ def build_tslot_nut(
         .extrude(spring_height)
     )
     body = body.union(spring_arm)
+
+    # Add interference nub
+    sphere_radius = (
+        spring_height / 2 / math.sin(math.radians(INTERFERENCE_NUB_ANGLE_DEG))
+    )
+    nub_center_z = spring_height / 2
+    # Create the spherical segment by revolving an arc
+    # Draw arc in YZ plane (at X=0), then revolve around Y axis
+    interference_nub = (
+        cq.Workplane("YZ")
+        .moveTo(spring_y_end, 0)
+        .radiusArc(
+            (spring_y_end + spring_interference, spring_height / 2), -sphere_radius
+        )
+        .lineTo(spring_y_end, spring_height / 2)
+        .close()
+        .revolve(360, (0, nub_center_z), (1, nub_center_z))
+    )
+    body = body.union(interference_nub)
 
     return body
 
