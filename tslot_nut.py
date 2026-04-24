@@ -48,7 +48,7 @@ def build_tslot_nut(
     profile: TSlotProfile = PROFILE_4545,
     nut: MetricNut = M4_NUT,
     clearance: float = 0.2,
-    nut_depth_past_neck: float = 2.0,  # effectively wall thickness
+    wall: float = 2.0,
     screw_entry_chamfer: float = 0.5,
     spring_thickness: float = 2.0,
     spring_height: float = 4.0,
@@ -59,33 +59,29 @@ def build_tslot_nut(
     The nut is designed to be 3D printed in a standing orientation (extruded along Z).
     The Y=0 plane represents the outer edge of the T-slot profile.
 
+    Height is automatically calculated.
+
     Args:
         profile: T-slot profile dimensions
         nut: Metric hex nut specifications
-        length: Length of the T-slot nut body (Z direction)
         clearance: Uniform clearance to subtract from profile dimensions for fit
-        nut_depth_past_neck: How far past the slot neck the hex nut pocket extends
+        wall: Wall thickness, including for the distance from the flange to the nut pocket
         screw_entry_chamfer: Chamfer size for screw entry hole
 
     Returns:
         CadQuery workplane with the T-slot nut body
     """
     nut_center_z = (
-        spring_height
-        + clearance * 2
-        + nut_depth_past_neck
-        + nut.across_flats / 2 * math.sqrt(3) / 2
+        spring_height + clearance * 2 + wall + nut.across_flats / 2 * math.sqrt(3) / 2
     )
-    length = (
-        nut_center_z + nut.across_flats / 2 * math.sqrt(3) / 2 + nut_depth_past_neck
-    )
+    height = nut_center_z + nut.across_flats / 2 * math.sqrt(3) / 2 + wall
 
     # Calculate dimensions with clearance
     neck_w = profile.slot_width - clearance * 2
     flange_w = profile.track_width - clearance * 2
     # neck is short by 2x clearance to allow clamp fit
     flange_y_start = profile.slot_depth - clearance * 2
-    flange_d = nut_depth_past_neck + nut.thickness
+    flange_d = wall + nut.thickness
     flange_y_end = flange_y_start + flange_d
 
     # at max depth, inset by diagonal clearance
@@ -113,7 +109,7 @@ def build_tslot_nut(
             ]
         )
         .close()
-        .extrude(length)
+        .extrude(height)
         .mirror(mirrorPlane="YZ", union=True)
     )
 
@@ -122,7 +118,7 @@ def build_tslot_nut(
         wp=body.faces("<Y").workplane(),
         locations=nut_locs,
         nut=nut,
-        depth=profile.slot_depth + nut_depth_past_neck,
+        depth=profile.slot_depth + wall,
         angle=30.0,
         chamfer=screw_entry_chamfer,
     )
