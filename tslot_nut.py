@@ -186,8 +186,9 @@ def build_tslot_nut(
     )
     body = body.union(spring_arm)
 
-    # Add interference nub using sagittaArc, see https://en.wikipedia.org/wiki/Sagitta_(geometry)
-    #
+    # Define the spherical nub using the https://en.wikipedia.org/wiki/Sagitta_(geometry)
+    # Note: Workplane.sagittaArc requires the full arc profile (both halves) to be drawn,
+    # but cannot be revolved since it self-intersects.
     # For a spherical nub: h = spring_height / 2, l = spring_interference
     # Chord from (spring_y_end, 0) to (spring_y_end + l, h)
     # Chord length: sqrt(l² + h²)
