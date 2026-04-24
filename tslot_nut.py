@@ -187,27 +187,14 @@ def build_tslot_nut(
     body = body.union(spring_arm)
 
     # Add interference nub using sagittaArc, see https://en.wikipedia.org/wiki/Sagitta_(geometry)
-    #
-    # For a spherical nub: h = spring_height / 2, l = spring_interference
-    # Chord from (spring_y_end, 0) to (spring_y_end + l, h)
-    # Chord length: sqrt(l² + h²)
-    # Arc radius from closed-form: r = (h² + l²) / (2l)
-    # Sagitta (perpendicular from chord midpoint to arc): s = r - sqrt(r² - (chord/2)²)
-    h = spring_height / 2
-    l = spring_interference
-    chord_length = math.sqrt(l**2 + h**2)
-    arc_radius = (h**2 + l**2) / (2 * l)
-    sagitta = arc_radius - math.sqrt(arc_radius**2 - (chord_length / 2) ** 2)
+    # for a spherical nub: h (total) = spring_height, l = spring_interference
     nub_center_z = spring_height / 2
-    # Create the spherical segment by revolving an arc
-    # Draw arc in YZ plane (at X=0), then revolve around Y axis
     interference_nub = (
         cq.Workplane("YZ")
         .moveTo(spring_y_end, 0)
-        .sagittaArc((spring_y_end + spring_interference, spring_height / 2), -sagitta)
-        .lineTo(spring_y_end, spring_height / 2)
+        .sagittaArc((spring_y_end, spring_height), -spring_interference)
         .close()
-        .revolve(360, (0, nub_center_z), (1, nub_center_z))
+        .revolve(180, (0, nub_center_z), (1, nub_center_z))
     )
     body = body.union(interference_nub)
 
