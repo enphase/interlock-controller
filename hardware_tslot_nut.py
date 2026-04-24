@@ -40,9 +40,11 @@ def build_tslot_nut(
     nut: MetricNut = M4_NUT,
     length: float = 25.0,
     clearance: float = 0.2,
-    interference: float = 0.2,
-    nut_depth_past_neck: float = 2.0,
+    nut_depth_past_neck: float = 2.0,  # effectively wall thickness
     screw_entry_chamfer: float = 0.5,
+    spring_thickness: float = 2.0,
+    spring_height: float = 6.0,
+    spring_interference: float = 1.0,
 ) -> cq.Workplane:
     """Build a T-slot nut for mounting into T-slot extrusion profiles.
 
@@ -54,7 +56,6 @@ def build_tslot_nut(
         nut: Metric hex nut specifications
         length: Length of the T-slot nut body (Z direction)
         clearance: Uniform clearance to subtract from profile dimensions for fit
-        interference: Reserved for future spring feature implementation
         nut_depth_past_neck: How far past the slot neck the hex nut pocket extends
         screw_entry_chamfer: Chamfer size for screw entry hole
 
@@ -102,8 +103,8 @@ def build_tslot_nut(
             ]
         )
         .close()
-        # .mirror(mirrorPlane="YZ")
         .extrude(length)
+        .mirror(mirrorPlane="YZ", union=True)
     )
 
     # Add hex nut cutout at Y=0 face, halfway up in Z
