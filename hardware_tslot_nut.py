@@ -85,7 +85,7 @@ def build_tslot_nut(
     chamfer = max(flange_w / 2 - flange_max_w, 0)
 
     # Build half the 2D profile in XY plane, then mirror
-    half_profile = (
+    body = (
         cq.Workplane("XY")
         .polyline(
             [
@@ -108,11 +108,9 @@ def build_tslot_nut(
     )
 
     # Add hex nut cutout at Y=0 face, halfway up in Z
-    wp_y0 = half_profile.faces("<Y").workplane()
     nut_locs = [(0, length / 2)]
-
     body = apply_hex_nut_tool(
-        wp=wp_y0,
+        wp=body.faces("<Y").workplane(),
         locations=nut_locs,
         nut=nut,
         depth=slot_d + nut_depth_past_neck,
