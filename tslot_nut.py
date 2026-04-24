@@ -50,9 +50,9 @@ def build_tslot_nut(
     clearance: float = 0.2,
     nut_depth_past_neck: float = 2.0,  # effectively wall thickness
     screw_entry_chamfer: float = 0.5,
-    spring_thickness: float = 2.5,
+    spring_thickness: float = 2.0,
     spring_height: float = 5.0,
-    spring_interference: float = 1.5,
+    spring_interference: float = 1.0,
 ) -> cq.Workplane:
     """Build a T-slot nut for mounting into T-slot extrusion profiles.
 
@@ -158,11 +158,11 @@ def build_tslot_nut(
                 (spring_height / 2 + spring_thickness, spring_y_end),
                 (
                     spring_height / 2 + spring_thickness,
-                    spring_y_start - spring_interference - clearance * 2,
+                    spring_y_start - spring_interference * 1.5 - clearance * 2,
                 ),
                 (
                     -spring_height / 2 - clearance * 2,
-                    spring_y_start - spring_interference - clearance * 2,
+                    spring_y_start - spring_interference * 1.5 - clearance * 2,
                 ),
             ]
         )
