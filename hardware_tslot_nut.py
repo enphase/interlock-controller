@@ -24,6 +24,14 @@ class TSlotProfile(NamedTuple):
     track_depth: float
     arm_thickness: float
 
+    def track_bottom_halfwidth(self) -> float:
+        slot_bottom_to_profile_center = self.overall_width / 2 - self.track_depth
+        return slot_bottom_to_profile_center - (self.arm_thickness / 2) * math.sqrt(2)
+
+    def chamfer(self) -> float:
+        """Returns the horizontal distance to inset the flange outer edges."""
+        return self.track_width / 2 - self.track_bottom_halfwidth()
+
 
 PROFILE_4545 = TSlotProfile(
     overall_width=45.0,
@@ -63,26 +71,17 @@ def build_tslot_nut(
         CadQuery workplane with the T-slot nut body
     """
     # Calculate dimensions with clearance
-    slot_w = profile.slot_width - clearance
-    slot_d = profile.slot_depth + clearance
-    flange_w = profile.track_width - clearance
+    neck_w = profile.slot_width - clearance * 2
+    flange_w = profile.track_width - clearance * 2
+    flange_y_start = profile.slot_depth  # y-coord at which flange starts
     flange_d = nut_depth_past_neck + nut.thickness
+    flange_y_end = flange_y_start + flange_d
 
-    # Calculate the chamfer, the horizontal distance to inset the flange outer edges
-    # The distance from the flange depth to the profile center is the same as the flange width to
-    # the diagonal profile centerline
-    flange_to_profile_center = (
-        profile.overall_width / 2
-        - profile.slot_depth
-        - nut_depth_past_neck
-        - nut.thickness
+    # at max depth, inset by diagonal clearance
+    chamfer = profile.chamfer() + clearance * math.sqrt(2)
+    flange_chamfer = max(
+        chamfer - (profile.track_depth - profile.slot_depth - flange_d), 0
     )
-    # subtract out the horizontal projection of the arm thickness in its quadrant to get the maximim width
-    flange_max_w = flange_to_profile_center - (
-        profile.arm_thickness / 2 + clearance
-    ) * math.sqrt(2)
-    # The chamfer is how much this cuts in from the track width
-    chamfer = max(flange_w / 2 - flange_max_w, 0)
 
     # Build half the 2D profile in XY plane, then mirror
     body = (
@@ -92,14 +91,14 @@ def build_tslot_nut(
                 # Centerline at X=0
                 (0, 0),
                 # Right side of neck
-                (slot_w / 2, 0),
-                (slot_w / 2, slot_d),
+                (neck_w / 2, 0),
+                (neck_w / 2, flange_y_start),
                 # Right side of flange
-                (flange_w / 2, slot_d),
-                (flange_w / 2, slot_d + flange_d - chamfer),
-                (flange_w / 2 - chamfer, slot_d + flange_d),
+                (flange_w / 2, flange_y_start),
+                (flange_w / 2, flange_y_end - flange_chamfer),
+                (flange_w / 2 - flange_chamfer, flange_y_end),
                 # Back to centerline
-                (0, slot_d + flange_d),
+                (0, flange_y_end),
             ]
         )
         .close()
@@ -113,11 +112,33 @@ def build_tslot_nut(
         wp=body.faces("<Y").workplane(),
         locations=nut_locs,
         nut=nut,
-        depth=slot_d + nut_depth_past_neck,
+        depth=profile.slot_depth + nut_depth_past_neck,
         angle=30.0,
         chamfer=screw_entry_chamfer,
     )
 
+    spring_y_end = profile.track_depth - clearance
+    spring_chamfer = chamfer - clearance  # account for truncated bottom from clearance
+    spring = (
+        cq.Workplane("XY")
+        .polyline(
+            [
+                # Centerline at X=0
+                (0, flange_y_start),
+                # Right side of flange
+                (flange_w / 2, flange_y_start),
+                (flange_w / 2, spring_y_end - spring_chamfer),
+                (flange_w / 2 - spring_chamfer, spring_y_end),
+                # Back to centerline
+                (0, spring_y_end),
+            ]
+        )
+        .close()
+        .extrude(spring_height)
+        .mirror(mirrorPlane="YZ", union=True)
+    )
+
+    body = body.union(spring)
     return body
 
 
