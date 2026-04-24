@@ -118,27 +118,64 @@ def build_tslot_nut(
     )
 
     spring_y_end = profile.track_depth - clearance
+    spring_y_start = profile.track_depth - clearance - spring_thickness
     spring_chamfer = chamfer - clearance  # account for truncated bottom from clearance
-    spring = (
+
+    spring_recess = (
         cq.Workplane("XY")
         .polyline(
             [
-                # Centerline at X=0
-                (0, flange_y_start),
+                (-spring_height / 2 - clearance * 2, spring_y_end),
+                (spring_height / 2 + spring_thickness, spring_y_end),
+                (
+                    spring_height / 2 + spring_thickness,
+                    spring_y_end - spring_thickness * 2 - clearance * 2,
+                ),
+                (
+                    -spring_height / 2 - clearance * 2,
+                    spring_y_end - spring_thickness * 2 - clearance * 2,
+                ),
+            ]
+        )
+        .close()
+        .extrude(spring_height + clearance * 2)
+    )
+    body = body.cut(spring_recess)
+
+    spring_base = (
+        cq.Workplane("XY")
+        .polyline(
+            [
+                # Start at the edge of the spring
+                (spring_height / 2 + spring_thickness, flange_y_start),
                 # Right side of flange
                 (flange_w / 2, flange_y_start),
                 (flange_w / 2, spring_y_end - spring_chamfer),
                 (flange_w / 2 - spring_chamfer, spring_y_end),
-                # Back to centerline
-                (0, spring_y_end),
+                # Back to start
+                (spring_height / 2 + spring_thickness, spring_y_end),
             ]
         )
         .close()
         .extrude(spring_height)
-        .mirror(mirrorPlane="YZ", union=True)
     )
+    body = body.union(spring_base)
 
-    body = body.union(spring)
+    spring_arm = (
+        cq.Workplane("XY")
+        .polyline(
+            [
+                (spring_height / 2 + spring_thickness, spring_y_start),
+                (-spring_height / 2, spring_y_start),
+                (-spring_height / 2, spring_y_end),
+                (spring_height / 2 + spring_thickness, spring_y_end),
+            ]
+        )
+        .close()
+        .extrude(spring_height)
+    )
+    body = body.union(spring_arm)
+
     return body
 
 
