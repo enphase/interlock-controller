@@ -146,6 +146,8 @@ def build_tslot_nut(
     )
     body = body.union(spring_base)
 
+    # allocate at least spring_interference * 1.5 (plus two clearances for face-to-face clearance)
+    # for the spring to fit into
     spring_recess = (
         cq.Workplane("XY")
         .polyline(
