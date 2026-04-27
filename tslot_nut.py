@@ -131,22 +131,23 @@ def build_tslot_nut(
         flange_y_end,
     )
     base_nominal = neck_nominal | flange_nominal
+    base_actual = base_nominal.buffer(-clearance, join_style="bevel")
 
     # 3. Spring Arm Nominal
-    # Arm follows track_outer with spring_thickness
-    track_inner = track_nominal.buffer(-spring_thickness, join_style="bevel")
-    spring_shell = track_nominal - track_inner
-
-    # Restrict to right side and bottom
-    spring_bbox = box(
+    # Construct spring arm by shelling the track, then restricting to the bounding box
+    track_cleared = track_nominal.buffer(-clearance, join_style="bevel")
+    spring_shell = track_cleared - track_cleared.buffer(
+        -spring_thickness, join_style="bevel"
+    )
+    spring_arm = spring_shell & box(
         -spring_height / 2 - clearance * 2,
         profile.slot_depth,
         profile.track_width / 2,
         profile.track_depth,
     )
-    spring_arm_nominal = spring_shell & spring_bbox
 
     # 4. Spring Recess
+    # allow a gap of 1.5x spring interference for spring deflection
     recess_y_start = (
         profile.track_depth - spring_thickness - spring_interference * 1.5 - clearance
     )
@@ -158,25 +159,17 @@ def build_tslot_nut(
     )
 
     # Compile layers
-    spring_layer_nominal = (base_nominal - recess_cut) | spring_arm_nominal
-
-    # 5. Apply clearance tolerances
-    base_cleared = base_nominal.buffer(-clearance, join_style="bevel")
-    spring_cleared = spring_layer_nominal.buffer(-clearance, join_style="bevel")
+    spring_actual = (base_actual - recess_cut) | spring_arm
+    # spring_actual = base_actual - recess_cut
 
     # 6. Convert to CadQuery and extrude
-    spring_faces = shapely_to_cq(spring_cleared)
-    body = cq.Workplane("XY").add(spring_faces).extrude(spring_height)
-
-    base_faces = shapely_to_cq(base_cleared)
-    base_body = (
+    body = cq.Workplane("XY").add(shapely_to_cq(spring_actual)).extrude(spring_height)
+    body = body.union(
         cq.Workplane("XY")
-        .workplane(offset=spring_height)
-        .add(base_faces)
+        .add(shapely_to_cq(base_actual))
         .extrude(height - spring_height)
+        .translate((0, 0, spring_height))
     )
-
-    body = body.union(base_body)
 
     # 7. Apply Hex Nut Cutout
     nut_locs = [(0, nut_center_z)]
@@ -191,7 +184,7 @@ def build_tslot_nut(
 
     # 8. Interference Nub
     # Nub is centered at X=0, attaches to the tip of the spring arm
-    actual_spring_y_end = spring_cleared.bounds[3]
+    actual_spring_y_end = spring_actual.bounds[3]
     h = spring_height / 2
     l = spring_interference
     chord_length = math.sqrt(l**2 + h**2)
