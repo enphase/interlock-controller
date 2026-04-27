@@ -27,7 +27,7 @@ def build_din35_stabilizer() -> cq.Workplane:
         top_face,
         locations,
         nut=M4_NUT,
-        depth=height - M4_NUT.thickness,
+        depth=height - M4_NUT.nut_thickness,
         angle=30,
     )
 

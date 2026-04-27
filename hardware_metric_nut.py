@@ -8,28 +8,28 @@ class MetricNut(NamedTuple):
     """Nominal dimensions for standard metric hex nuts."""
 
     thread_size: str
-    across_flats: float
-    thickness: float
+    nut_hex_across_flats: float
+    nut_thickness: float
     clearance_dia: float
     countersink_depth: float
 
     def diameter(self) -> float:
         """Returns the circumscribed diameter (distance across corners)."""
-        return self.across_flats / (math.sqrt(3) / 2)
+        return self.nut_hex_across_flats / (math.sqrt(3) / 2)
 
 
 # Nominal dimensions from ISO/DIN standards for M3 hex nuts
 M3_NUT = MetricNut(
     thread_size="M3",
-    across_flats=5.5,
-    thickness=2.4,
+    nut_hex_across_flats=5.5,
+    nut_thickness=2.4,
     clearance_dia=3.2,
     countersink_depth=1.7,
 )
 M4_NUT = MetricNut(
     thread_size="M4",
-    across_flats=7.0,
-    thickness=3.2,
+    nut_hex_across_flats=7.0,
+    nut_thickness=3.2,
     clearance_dia=4.3,
     countersink_depth=2.3,
 )
@@ -54,7 +54,7 @@ def apply_hex_nut_tool(
     An optional angle can rotate the hex nut around its center.
     """
     actual_clearance_dia = nut.clearance_dia + tol_clearance * 2
-    circumscribed_dia = (nut.across_flats + tol_flats * 2) / (math.sqrt(3) / 2)
+    circumscribed_dia = (nut.nut_hex_across_flats + tol_flats * 2) / (math.sqrt(3) / 2)
 
     res = wp
     if chamfer > 0:
@@ -76,7 +76,7 @@ def apply_hex_nut_tool(
         .workplane(offset=-depth)
         .pushPoints(locations)
         .placeSketch(nut_sketch)
-        .cutBlind(-nut.thickness)
+        .cutBlind(-nut.nut_thickness)
     )
     # Clearance hole (cut through all)
     res = (

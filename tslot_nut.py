@@ -101,9 +101,12 @@ def build_tslot_nut(
     from shapely.geometry import Polygon, box
 
     nut_center_z = (
-        spring_height + clearance * 2 + wall + nut.across_flats / 2 * math.sqrt(3) / 2
+        spring_height
+        + clearance * 2
+        + wall
+        + nut.nut_hex_across_flats / 2 * math.sqrt(3) / 2
     )
-    height = nut_center_z + nut.across_flats / 2 * math.sqrt(3) / 2 + wall
+    height = nut_center_z + nut.nut_hex_across_flats / 2 * math.sqrt(3) / 2 + wall
 
     # 1. Define outer exact boundaries of the track
     track_nominal = Polygon(
@@ -123,7 +126,7 @@ def build_tslot_nut(
         profile.slot_depth,
     )
 
-    flange_y_end = profile.slot_depth + wall + nut.thickness
+    flange_y_end = profile.slot_depth + wall + nut.nut_thickness
     flange_nominal = track_nominal & box(
         -profile.track_width / 2,
         clearance * 2,  # starts offset to ensure flange clamps before neck bottoms out
