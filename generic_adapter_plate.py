@@ -28,8 +28,8 @@ def build_adapter_plate(
     The hole is countersunk.
     """
     BACK_MOUNTING_SCREW = M4_NUT
-    BACK_MOUNTING_OFFSET = 12.0  # distance from edge of plate to mounting hole
-    BACK_MOUNTING_STUB_DIAMETER = 12.0
+    BACK_MOUNTING_OFFSET = 8.0  # distance from edge of plate to mounting hole
+    BACK_MOUNTING_STUB_DIAMETER = 16.0
 
     s = (
         cq.Sketch()
@@ -51,9 +51,7 @@ def build_adapter_plate(
         .circle(BACK_MOUNTING_STUB_DIAMETER / 2)
         .clean()
     )
-
     base = cq.Workplane("XY").placeSketch(s).extrude(thickness / 2, both=True)
-
     # Subtract a tiny amount to avoid CAD kernel issues with fillets that perfectly meet other geometry
     base = base.newObject(base.edges("|Z").vals()).fillet(fillet - 0.001)
 
@@ -86,4 +84,15 @@ if __name__ == "__main__":
             fillet=4.0,
         ),
         "idec76_4545_adapter.stl",
+    )
+    cq.exporters.export(
+        build_adapter_plate(
+            76.0,
+            140.0,
+            [(-31, 52), (-31, -42), (31, -52), (31, 42)],
+            M4_NUT,
+            back_mounting_x=-(76 - 45) / 2,
+            fillet=4.0,
+        ),
+        "idec140_4545_adapter.stl",
     )
