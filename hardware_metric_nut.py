@@ -39,7 +39,7 @@ def apply_hex_nut_tool(
     wp: cq.Workplane,
     locations: List[Tuple[float, float]],
     nut: MetricNut,
-    depth: float,
+    depth: float = 0.0,
     *,
     tol_clearance: float = 0.2,
     tol_flats: float = 0.0,  # reduced tolerance for snug fit
