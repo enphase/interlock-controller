@@ -87,3 +87,28 @@ def apply_hex_nut_tool(
     )
 
     return res
+
+
+def apply_countersink_hole(
+    wp: cq.Workplane,
+    locations: List[Tuple[float, float]],
+    nut: MetricNut,
+    *,
+    tol_clearance: float = 0.2,
+    tol_countersink: float = 0.2,
+):
+    """
+    Applies a countersink hole (typically 90 degrees for metric flat head screws)
+    to a given Workplane at specified locations.
+    The countersink is cut from the surface of the Workplane.
+    """
+    return (
+        wp.copyWorkplane(wp)
+        .pushPoints(locations)
+        .cskHole(
+            diameter=nut.clearance_dia + tol_clearance * 2,
+            cskDiameter=nut.clearance_dia
+            + 2 * (nut.countersink_depth + tol_countersink),
+            cskAngle=90,
+        )
+    )
