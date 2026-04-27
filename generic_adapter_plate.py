@@ -37,5 +37,5 @@ if __name__ == "__main__":
             M4_NUT,
             back_mounting_x=-(76 - 45) / 2,
         ),
-        "idec_76_adapter_plate.stl",
+        "idec76_4545_adapter.stl",
     )
