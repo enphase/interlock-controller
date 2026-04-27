@@ -14,11 +14,12 @@ def build_adapter_plate(
     back_mounting_x: float = 0.0,
 ) -> cq.Workplane:
     """Generates an adapter plate, of width x height, centered at (0, 0) on the XY plane.
-    The piece this adapts to is installed from +Z and has threads, screwed in from -Z.
-    This has holes for the piece at mount_locations.
+    The piece this adapts to is threaded and installed from +Z, screwed in from -Z.
+    This has countersunk holes for the piece at mount_locations.
 
     This has two stubs, centered at x=back_mounting_x, sticking out from the top and bottom,
-    to attach to a backing piece in -Z, screwed in from +Z.
+    to attach to a (threaded) backing piece in -Z, screwed in from +Z.
+    The hole is countersunk.
     """
     THICKNESS = 4.0  # plate thickness
     BACK_MOUNTING_SCREW = M4_NUT
