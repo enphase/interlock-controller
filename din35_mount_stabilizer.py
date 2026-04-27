@@ -6,10 +6,10 @@ from hardware_metric_nut import M4_NUT, MetricNut, apply_hex_nut_tool
 
 
 def build_din35_stabilizer() -> cq.Workplane:
+    nut_spacing = 7.0 + 4  # spacing between perforations plus screw diameter
     width = 35.0  # width of DIN rail
-    length = 60.0  # two perforations
+    length = nut_spacing + 8.0 * 2
     height = 6.0  # height of screw boss of the box
-    nut_spacing = 10.0 + 4  # spacing between perforations plus screw diameter
 
     # Base block
     stabilizer = cq.Workplane("XY").box(length, width, height).edges("|Z").fillet(4.0)
@@ -30,6 +30,7 @@ def build_din35_stabilizer() -> cq.Workplane:
         locations,
         nut=M4_NUT,
         depth=height - M4_NUT.thickness,
+        angle=30,
     )
 
     return stabilizer
