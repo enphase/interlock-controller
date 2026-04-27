@@ -44,6 +44,33 @@ PROFILE_4545 = TSlotProfile(
 )
 
 
+def shapely_to_cq(poly):
+    """Convert a Shapely polygon or multipolygon to a list of CadQuery Faces."""
+    if poly.geom_type == "Polygon":
+        polygons = [poly]
+    elif poly.geom_type == "MultiPolygon":
+        polygons = poly.geoms
+    else:
+        return []
+
+    faces = []
+    for p in polygons:
+        ext_points = list(p.exterior.coords)
+        ext_wire = cq.Workplane("XY").polyline(ext_points).close().wire().val()
+
+        int_wires = []
+        for interior in p.interiors:
+            int_points = list(interior.coords)
+            int_wires.append(
+                cq.Workplane("XY").polyline(int_points).close().wire().val()
+            )
+
+        face = cq.Face.makeFromWires(ext_wire, int_wires)
+        faces.append(face)
+
+    return faces
+
+
 def build_tslot_nut(
     profile: TSlotProfile = PROFILE_4545,
     nut: MetricNut = M4_NUT,
@@ -71,48 +98,87 @@ def build_tslot_nut(
     Returns:
         CadQuery workplane with the T-slot nut body
     """
+    from shapely.geometry import Polygon, box
+
     nut_center_z = (
         spring_height + clearance * 2 + wall + nut.across_flats / 2 * math.sqrt(3) / 2
     )
     height = nut_center_z + nut.across_flats / 2 * math.sqrt(3) / 2 + wall
 
-    # Calculate dimensions with clearance
-    neck_w = profile.slot_width - clearance * 2
-    flange_w = profile.track_width - clearance * 2
-    # neck is short by 2x clearance to allow clamp fit
-    flange_y_start = profile.slot_depth - clearance * 2
-    flange_d = wall + nut.thickness
-    flange_y_end = flange_y_start + flange_d
-
-    # at max depth, inset by diagonal clearance
-    chamfer = profile.chamfer() + clearance * math.sqrt(2)
-    flange_chamfer = max(
-        chamfer - (profile.track_depth - profile.slot_depth - flange_d), 0
+    # 1. Define outer exact boundaries of the track
+    track_nominal = Polygon(
+        [
+            (-profile.track_width / 2, profile.slot_depth),
+            (profile.track_width / 2, profile.slot_depth),
+            (profile.track_width / 2, profile.track_depth - profile.chamfer()),
+            (profile.track_width / 2 - profile.chamfer(), profile.track_depth),
+            (-profile.track_width / 2 + profile.chamfer(), profile.track_depth),
+            (-profile.track_width / 2, profile.track_depth - profile.chamfer()),
+        ]
+    )
+    neck_nominal = box(
+        -profile.slot_width / 2,
+        0.0,
+        profile.slot_width / 2,
+        profile.slot_depth,
     )
 
-    # Build half the 2D profile in XY plane, then mirror
-    body = (
+    flange_y_end = profile.slot_depth + wall + nut.thickness
+    flange_nominal = track_nominal & box(
+        -profile.track_width / 2,
+        clearance * 2,  # starts offset to ensure flange clamps before neck bottoms out
+        profile.track_width / 2,
+        flange_y_end,
+    )
+    base_nominal = neck_nominal | flange_nominal
+
+    # 3. Spring Arm Nominal
+    # Arm follows track_outer with spring_thickness
+    track_inner = track_nominal.buffer(-spring_thickness, join_style="bevel")
+    spring_shell = track_nominal - track_inner
+
+    # Restrict to right side and bottom
+    spring_bbox = box(
+        -spring_height / 2 - clearance * 2,
+        profile.slot_depth,
+        profile.track_width / 2,
+        profile.track_depth,
+    )
+    spring_arm_nominal = spring_shell & spring_bbox
+
+    # 4. Spring Recess
+    recess_y_start = (
+        profile.track_depth - spring_thickness - spring_interference * 1.5 - clearance
+    )
+    recess_cut = box(
+        -spring_height / 2 - clearance * 2,
+        recess_y_start,
+        profile.track_width / 2,
+        profile.track_depth,
+    )
+
+    # Compile layers
+    spring_layer_nominal = (base_nominal - recess_cut) | spring_arm_nominal
+
+    # 5. Apply clearance tolerances
+    base_cleared = base_nominal.buffer(-clearance, join_style="bevel")
+    spring_cleared = spring_layer_nominal.buffer(-clearance, join_style="bevel")
+
+    # 6. Convert to CadQuery and extrude
+    spring_faces = shapely_to_cq(spring_cleared)
+    body = cq.Workplane("XY").add(spring_faces).extrude(spring_height)
+
+    base_faces = shapely_to_cq(base_cleared)
+    base_body = (
         cq.Workplane("XY")
-        .polyline(
-            [
-                # Centerline at X=0
-                (0, 0),
-                # Right side of neck
-                (neck_w / 2, 0),
-                (neck_w / 2, flange_y_start),
-                # Right side of flange
-                (flange_w / 2, flange_y_start),
-                (flange_w / 2, flange_y_end - flange_chamfer),
-                (flange_w / 2 - flange_chamfer, flange_y_end),
-                # Back to centerline
-                (0, flange_y_end),
-            ]
-        )
-        .close()
-        .extrude(height)
-        .mirror(mirrorPlane="YZ", union=True)
+        .workplane(offset=spring_height)
+        .add(base_faces)
+        .extrude(height - spring_height)
     )
 
+    body = body.union(base_body)
+
+    # 7. Apply Hex Nut Cutout
     nut_locs = [(0, nut_center_z)]
     body = apply_hex_nut_tool(
         wp=body.faces("<Y").workplane(),
@@ -123,87 +189,23 @@ def build_tslot_nut(
         chamfer=screw_entry_chamfer,
     )
 
-    spring_y_end = profile.track_depth - clearance - clearance
-    spring_y_start = profile.track_depth - clearance - clearance - spring_thickness
-    spring_chamfer = chamfer  # account for truncated bottom from clearance
-
-    # allow room for the spring to deflect inward, with 2x clearance for face-to-face
-    recess_y_start = spring_y_start - spring_interference * 1.5 - clearance * 2
-
-    spring_recess = (
-        cq.Workplane("XY")
-        .polyline(
-            [
-                (-spring_height / 2 - clearance * 2, recess_y_start),
-                (flange_w / 2, recess_y_start),
-                (flange_w / 2, spring_y_end),
-                (-spring_height / 2 - clearance * 2, spring_y_end),
-            ]
-        )
-        .close()
-        .extrude(spring_height)
-    )
-    body = body.cut(spring_recess)
-
-    # this cuts out a higher clearance area where the spring is expected to deflect more
-    # TODO implement this cleaner, this currently creates overhangs
-    # spring_recess2 = (
-    #     cq.Workplane("XY")
-    #     .polyline(
-    #         [
-    #             (-spring_height / 2 - clearance * 2, recess_y_start),
-    #             (+spring_height / 2 + clearance * 2, recess_y_start),
-    #             (+spring_height / 2 + clearance * 2, spring_y_end),
-    #             (-spring_height / 2 - clearance * 2, spring_y_end),
-    #         ]
-    #     )
-    #     .close()
-    #     .extrude(spring_height + clearance * 2)
-    # )
-    # body = body.cut(spring_recess2)
-
-    inner_x_diag = flange_w / 2 - spring_chamfer - spring_thickness * (math.sqrt(2) - 1)
-    inner_y_diag = spring_y_end - spring_chamfer - spring_thickness * (math.sqrt(2) - 1)
-    spring_arm = (
-        cq.Workplane("XY")
-        .polyline(
-            [
-                (flange_w / 2 - spring_thickness, flange_y_start),
-                (flange_w / 2 - spring_thickness, inner_y_diag),
-                (inner_x_diag, spring_y_start),
-                (-spring_height / 2, spring_y_start),
-                (-spring_height / 2, spring_y_end),
-                (flange_w / 2 - spring_chamfer, spring_y_end),
-                (flange_w / 2, spring_y_end - spring_chamfer),
-                (flange_w / 2, flange_y_start),
-            ]
-        )
-        .close()
-        .extrude(spring_height)
-    )
-    body = body.union(spring_arm)
-
-    # Define the spherical nub using the https://en.wikipedia.org/wiki/Sagitta_(geometry)
-    # Note: Workplane.sagittaArc requires the full arc profile (both halves) to be drawn,
-    # but cannot be revolved since it self-intersects.
-    # For a spherical nub: h = spring_height / 2, l = spring_interference
-    # Chord from (spring_y_end, 0) to (spring_y_end + l, h)
-    # Chord length: sqrt(l² + h²)
-    # Arc radius from closed-form: r = (h² + l²) / (2l)
-    # Sagitta (perpendicular from chord midpoint to arc): s = r - sqrt(r² - (chord/2)²)
+    # 8. Interference Nub
+    # Nub is centered at X=0, attaches to the tip of the spring arm
+    actual_spring_y_end = spring_cleared.bounds[3]
     h = spring_height / 2
     l = spring_interference
     chord_length = math.sqrt(l**2 + h**2)
     arc_radius = (h**2 + l**2) / (2 * l)
     sagitta = arc_radius - math.sqrt(arc_radius**2 - (chord_length / 2) ** 2)
     nub_center_z = spring_height / 2
-    # Create the spherical segment by revolving an arc
-    # Draw arc in YZ plane (at X=0), then revolve around Y axis
+
     interference_nub = (
         cq.Workplane("YZ")
-        .moveTo(spring_y_end, 0)
-        .sagittaArc((spring_y_end + spring_interference, spring_height / 2), -sagitta)
-        .lineTo(spring_y_end, spring_height / 2)
+        .moveTo(actual_spring_y_end, 0)
+        .sagittaArc(
+            (actual_spring_y_end + spring_interference, spring_height / 2), -sagitta
+        )
+        .lineTo(actual_spring_y_end, spring_height / 2)
         .close()
         .revolve(360, (0, nub_center_z), (1, nub_center_z))
     )
