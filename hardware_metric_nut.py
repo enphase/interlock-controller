@@ -11,6 +11,7 @@ class MetricNut(NamedTuple):
     across_flats: float
     thickness: float
     clearance_dia: float
+    countersink_depth: float
 
     def diameter(self) -> float:
         """Returns the circumscribed diameter (distance across corners)."""
@@ -18,8 +19,20 @@ class MetricNut(NamedTuple):
 
 
 # Nominal dimensions from ISO/DIN standards for M3 hex nuts
-M3_NUT = MetricNut(thread_size="M3", across_flats=5.5, thickness=2.4, clearance_dia=3.2)
-M4_NUT = MetricNut(thread_size="M4", across_flats=7.0, thickness=3.2, clearance_dia=4.3)
+M3_NUT = MetricNut(
+    thread_size="M3",
+    across_flats=5.5,
+    thickness=2.4,
+    clearance_dia=3.2,
+    countersink_depth=1.7,
+)
+M4_NUT = MetricNut(
+    thread_size="M4",
+    across_flats=7.0,
+    thickness=3.2,
+    clearance_dia=4.3,
+    countersink_depth=2.3,
+)
 
 
 def apply_hex_nut_tool(
