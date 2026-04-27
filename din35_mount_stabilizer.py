@@ -1,8 +1,6 @@
-import math
 import cadquery as cq
-from typing import NamedTuple
 
-from hardware_metric_nut import M4_NUT, MetricNut, apply_hex_nut_tool
+from hardware_metric_nut import M4_NUT, apply_hex_nut_tool
 
 
 def build_din35_stabilizer() -> cq.Workplane:
