@@ -18,6 +18,7 @@ def build_adapter_plate(
     payload_screw: MetricNut,
     *,
     payload_hole_tool: Callable = apply_countersink_hole,
+    payload_face="<Z",
     thickness: float = 3.0,
     rail_mounting_x: float = 0.0,
     fillet: float = 0.0,
@@ -102,12 +103,14 @@ if __name__ == "__main__":
     cq.exporters.export(
         build_adapter_plate(
             47,
-            105.0,
-            [(-47 / 2 + 9, -105 / 2 + 16), (47 / 2 - 9, -105 / 2 + 69)],
+            115.0,
+            [(-47 / 2 + 9, -105 / 2 + 69 + 5), (47 / 2 - 9, -105 / 2 + 16 + 5)],
             M3_NUT,
             thickness=5.0,  # accommodate a M3x8 screw
             fillet=4.0,
-            payload_hole_tool=apply_hex_nut_tool,
+            payload_hole_tool=lambda wp, locs, screw: apply_hex_nut_tool(
+                wp, locs, screw, depth=0
+            ),
         ),
         "doorsense_adapter.stl",
     )
