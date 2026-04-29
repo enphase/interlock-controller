@@ -1,6 +1,6 @@
 # interlock-controller
 
-## DISCLAIMER
+## ⚠️ DISCLAIMER ⚠️
 
 This design is provided for reference and development purposes only.
 It is not certified, not validated, and not intended for use as a safety‑critical control system without independent verification, validation, and certification by the user.
