@@ -54,6 +54,8 @@ Internal wiring color conventions for terminal blocks and non-connector-pigtail 
 - Orange: interlock-closed +24v
 - Grey: general signal
 
+![Wiring Diagram](docs/wiring-diagram.png)
+
 - 24v architecture, as is common for industrial automation.
 - Interlock loop starts at 24v and goes through (through and back) all the sensor ports, ending in the interlock-ready +24v rail.
   - This feeds the start button LEDs.
