@@ -35,7 +35,7 @@ M4_NUT = MetricNut(
 )
 
 
-def apply_hex_nut_tool(
+def cut_hex_nut_pocket(
     wp: cq.Workplane,
     locations: List[Tuple[float, float]],
     nut: MetricNut,
@@ -47,7 +47,7 @@ def apply_hex_nut_tool(
     angle: float = 0.0,
 ):
     """
-    Applies a hex nut pocket and clearance hole to a given Workplane at specified locations.
+    Cuts a hex nut pocket and clearance hole into a workplane at specified locations.
     The pocket is cut blind starting from `depth` inside the given Workplane.
     The clearance hole uses cutThruAll.
     An optional chamfer can be added to the clearance hole at the Workplane surface.
@@ -89,7 +89,7 @@ def apply_hex_nut_tool(
     return res
 
 
-def apply_countersink_hole(
+def cut_countersink_hole(
     wp: cq.Workplane,
     locations: List[Tuple[float, float]],
     nut: MetricNut,
@@ -98,8 +98,8 @@ def apply_countersink_hole(
     tol_countersink: float = 0.2,
 ):
     """
-    Applies a countersink hole (typically 90 degrees for metric flat head screws)
-    to a given Workplane at specified locations.
+    Cuts a countersink hole (typically 90 degrees for metric flat head screws)
+    into a workplane at specified locations.
     The countersink is cut from the surface of the Workplane.
     """
     return (

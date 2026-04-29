@@ -1,13 +1,14 @@
 import cadquery as cq
 from typing import List, Tuple
-from hardware_metric_nut import MetricNut, apply_hex_nut_tool
+from .fasteners import MetricNut, cut_hex_nut_pocket
 
 PANEL_CUTOUT_WIDTH = 27.3
 PANEL_CUTOUT_HEIGHT = 31.4
 PANEL_CUTOUT_RADIUS = 1.0
 HOLE_SPACING = 36.0
 
-def apply_719w_cutouts(
+
+def cut_719w_power_entry(
     wp: cq.Workplane,
     locations: List[Tuple[float, float]],
     nut: MetricNut,
@@ -17,7 +18,7 @@ def apply_719w_cutouts(
     chamfer: float = 0.0,
 ) -> cq.Workplane:
     """
-    Applies the cutout for the 719W-00/02 AC power entry module.
+    Cuts the panel cutout for the 719W-00/02 AC power entry module.
     """
     sketch = (
         cq.Sketch()
@@ -40,13 +41,15 @@ def apply_719w_cutouts(
     nut_locations = []
     for loc in locations:
         cx, cy = loc
-        nut_locations.extend([
-            (cx - HOLE_SPACING / 2, cy),
-            (cx + HOLE_SPACING / 2, cy),
-        ])
+        nut_locations.extend(
+            [
+                (cx - HOLE_SPACING / 2, cy),
+                (cx + HOLE_SPACING / 2, cy),
+            ]
+        )
 
     # Apply hex nut cutouts
-    res = apply_hex_nut_tool(
+    res = cut_hex_nut_pocket(
         res.copyWorkplane(cq.Workplane(wp.plane)),
         nut_locations,
         nut,

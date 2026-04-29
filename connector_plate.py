@@ -1,9 +1,9 @@
 import cadquery as cq
 
-from hardware_719w import apply_719w_cutouts
-from hardware_m12 import apply_m12_cutouts
-from hardware_metric_nut import M3_NUT, apply_hex_nut_tool
-from hardware_towerlight import apply_tower_light_cutouts
+from cad_lib.power_entry import cut_719w_power_entry
+from cad_lib.connectors import cut_m12_connector_holes
+from cad_lib.fasteners import M3_NUT, cut_hex_nut_pocket
+from cad_lib.indicators import cut_tower_light_mounting
 
 # --- Parameters ---
 
@@ -96,9 +96,9 @@ def build_base_plate(
         )
         plate = plate.union(flange_wp)
 
-    # 3. Cut the hex nut slots and clearance holes using the tool modifier
+    # 3. Cut the hex nut slots and clearance holes
     # We start from the bottom face (<Z) to pocket the nut upward, then cut clearance through all
-    plate = apply_hex_nut_tool(
+    plate = cut_hex_nut_pocket(
         plate.faces("<Z"),
         screw_locations,
         HEX_NUT,
@@ -183,13 +183,13 @@ def build_bottom_cutout_plate() -> cq.Workplane:
         version_text=f"BOT {VERSION}",
     )
 
-    # 5. Cut the M12 connector holes using the reusable sketch profile
+    # 5. Cut the M12 connector holes
     # We start from the bottom face (<Z) and cut through all downwards
     # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
-    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+    plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
     # 6. Cut the 719W AC Power Entry Module cutout
-    plate = apply_719w_cutouts(
+    plate = cut_719w_power_entry(
         plate.faces("<Z"),
         power_locations,
         HEX_NUT,
@@ -210,7 +210,7 @@ def build_top_cutout_plate() -> cq.Workplane:
         for i in range(num_connectors)
     ]
 
-    # 5. Cut the M12 connector holes using the reusable sketch profile
+    # 5. Cut the M12 connector holes
     # We start from the bottom face (<Z) and cut through all downwards
     # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = build_base_plate(
@@ -221,9 +221,9 @@ def build_top_cutout_plate() -> cq.Workplane:
         version_text=f"TOP {VERSION}",
     )
 
-    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+    plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
-    plate = apply_tower_light_cutouts(
+    plate = cut_tower_light_mounting(
         plate.faces("<Z").workplane(),
         (-(cutout_length / 2 - CUTOUT_RADIUS - 18), 0),
         depth=NUT_DEPTH,
@@ -242,7 +242,7 @@ def build_side_cutout_plate() -> cq.Workplane:
         for i in range(num_connectors)
     ]
 
-    # 5. Cut the M12 connector holes using the reusable sketch profile
+    # 5. Cut the M12 connector holes
     # We start from the bottom face (<Z) and cut through all downwards
     # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = build_base_plate(
@@ -253,7 +253,7 @@ def build_side_cutout_plate() -> cq.Workplane:
         version_text=f"SIDE {VERSION}",
     )
 
-    plate = apply_m12_cutouts(plate.faces("<Z").workplane(), connector_locations)
+    plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
     return plate
 

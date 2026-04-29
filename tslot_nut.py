@@ -2,7 +2,7 @@ import math
 import cadquery as cq
 from typing import NamedTuple
 
-from hardware_metric_nut import M4_NUT, MetricNut, apply_hex_nut_tool
+from cad_lib.fasteners import M4_NUT, MetricNut, cut_hex_nut_pocket
 
 
 class TSlotProfile(NamedTuple):
@@ -174,9 +174,9 @@ def build_tslot_nut(
         .translate((0, 0, spring_height))
     )
 
-    # 7. Apply Hex Nut Cutout
+    # 7. Cut Hex Nut Pocket
     nut_locs = [(0, nut_center_z)]
-    body = apply_hex_nut_tool(
+    body = cut_hex_nut_pocket(
         wp=body.faces("<Y").workplane(),
         locations=nut_locs,
         nut=nut,

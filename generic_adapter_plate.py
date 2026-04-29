@@ -2,11 +2,11 @@ from typing import List, Tuple, Callable
 
 import cadquery as cq
 
-from hardware_metric_nut import (
+from cad_lib.fasteners import (
     M3_NUT,
     M4_NUT,
-    apply_countersink_hole,
-    apply_hex_nut_tool,
+    cut_countersink_hole,
+    cut_hex_nut_pocket,
     MetricNut,
 )
 
@@ -17,7 +17,7 @@ def build_adapter_plate(
     payload_mount_locations: List[Tuple[float, float]],
     payload_screw: MetricNut,
     *,
-    payload_hole_tool: Callable = apply_countersink_hole,
+    payload_hole_tool: Callable = cut_countersink_hole,
     payload_face="<Z",
     thickness: float = 3.0,
     rail_mounting_x: float = 0.0,
@@ -70,7 +70,7 @@ def build_adapter_plate(
         (rail_mounting_x, height / 2 + RAIL_MOUNTING_OFFSET),
         (rail_mounting_x, -height / 2 - RAIL_MOUNTING_OFFSET),
     ]
-    base = apply_countersink_hole(
+    base = cut_countersink_hole(
         base.faces(">Z").workplane(), stub_locations, RAIL_MOUNTING_SCREW
     )
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             M3_NUT,
             thickness=5.0,  # accommodate a M3x8 screw
             fillet=4.0,
-            payload_hole_tool=lambda wp, locs, screw: apply_hex_nut_tool(
+            payload_hole_tool=lambda wp, locs, screw: cut_hex_nut_pocket(
                 wp, locs, screw, depth=0
             ),
         ),

@@ -5,11 +5,11 @@ PANEL_CUTOUT_DIA = 15.4
 PANEL_CUTOUT_FLATS = 13.5
 
 
-def apply_m12_cutouts(
+def cut_m12_connector_holes(
     wp: cq.Workplane, locations: List[Tuple[float, float]], *, tol: float = 0.0
 ) -> cq.Workplane:
     """
-    Applies the M12 double-D cutouts to the given workplane, cutting through all.
+    Cuts M12 double-D connector holes into the workplane, cutting through all.
     Specified for T4171210004-001 (standard PG9 double-D cutout).
 
     It is assumed the cutout pattern is pre-toleranced.

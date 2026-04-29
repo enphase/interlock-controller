@@ -1,6 +1,6 @@
 import cadquery as cq
 
-from hardware_metric_nut import M4_NUT, apply_hex_nut_tool
+from cad_lib.fasteners import M4_NUT, cut_hex_nut_pocket
 
 
 def build_din35_stabilizer() -> cq.Workplane:
@@ -21,9 +21,9 @@ def build_din35_stabilizer() -> cq.Workplane:
         (nut_spacing / 2, 0),
     ]
 
-    # Apply the M4 hex nut tool
+    # Cut the M4 hex nut pockets
     # depth = height will make the pocket start at the bottom face and cut upwards into the part
-    stabilizer = apply_hex_nut_tool(
+    stabilizer = cut_hex_nut_pocket(
         top_face,
         locations,
         nut=M4_NUT,
