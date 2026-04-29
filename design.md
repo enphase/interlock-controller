@@ -45,17 +45,6 @@ Part selections:
 - Cables: M12A05ML-12AFL-Sx00x
 
 
-## Power Entry
-
-Power entry consists of one fused C13 power entry connector.
-
-Part selections:
-- C13 with fuse: 719W-00/02
-- Fuse: 5x20mm fuse:
-  - 250mA slow: 0034.3111
-  - 500mA fast: 0034.1513
-
-
 ## Electrical architecture
 
 Internal wiring color conventions for terminal blocks and non-connector-pigtail wires ([source](https://industrialmonitordirect.com/blogs/knowledgebase/24v-dc-control-wiring-wire-color-codes-ul-en-standards)):
@@ -64,7 +53,6 @@ Internal wiring color conventions for terminal blocks and non-connector-pigtail 
 - Purple: interlock-ready +24v
 - Orange: interlock-closed +24v
 - Grey: general signal
-
 
 - 24v architecture, as is common for industrial automation.
 - Interlock loop starts at 24v and goes through (through and back) all the sensor ports, ending in the interlock-ready +24v rail.
@@ -81,7 +69,16 @@ Internal wiring color conventions for terminal blocks and non-connector-pigtail 
   - A single relay failure can lead to an inconsistent state with both red and green LEDs active, which is an invalid state requiring repairs.
 
 Part selections:
-- 120->24 converter: HDR-30-24
+- New power entry architecture
+  - Any 24v barrel jack brick, preferably with UL or TUV, eg https://www.amazon.com/dp/B08T636YVR
+  - Panel-mount barrel jack: https://www.amazon.com/dp/B091PS6XQ4
+- Old power entry architecture
+  - C13 with fuse: 719W-00/02
+    - Note, nonstandard thin quick-disconnect connectors! 
+  - Fuse: 5x20mm fuse:
+    - 250mA slow: 0034.3111
+    - 500mA fast: 0034.1513
+  - 120->24 converter: HDR-30-24
 - Standard relay: Phoenix 2903342
 - Force-guided relay: Phoenix 2908215
 - Terminal blocks: PTFIX series
