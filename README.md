@@ -75,7 +75,7 @@ See [design.md](design.md) for the electronics inside the box.
 
 ### Control Boxes
 
-Human interface boxes (like for e-stop and pushbutton ueswitches) use IDEC boxes like FB1W-111Y and FB2W-211Z, which are mounted to the T-slot framing using adapter plates.
+Human interface boxes (like for e-stop and pushbutton switches) use IDEC boxes like FB1W-111Y and FB2W-211Z, which are mounted to the T-slot framing using adapter plates.
 
 ![idec-connector.jpg](docs/idec-connector.jpg)
 
@@ -86,6 +86,6 @@ Because these add thickness, the O-ring on the M12 connectors must be removed.
 Additionally, these have an anti-rotation feature, so a 1mm wide x 2mm long (radially outward) slot needs to be dremeled into the top of the punchout.
 The anti-rotation feature is triangular, the slot does not have to be completely through.
 
-[generic_adapter_plate.py](adapter_plate.py) generates adapter plates that adapt the back of these boxes to attach to the T-slot framing.
+[adapter_plate.py](adapter_plate.py) generates adapter plates that adapt the back of these boxes to attach to the T-slot framing.
 These attach to the back of the IDEC box using M4 countersunk screws.
 You will need to tap the factory holes on the box with a M4 tap.
