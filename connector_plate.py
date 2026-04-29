@@ -274,8 +274,6 @@ def build_side_cutout_plate() -> cq.Workplane:
 
 # --- Export ---
 if __name__ == "__main__":
-    print("Exporting...")
-    cq.exporters.export(build_top_cutout_plate(), "top_plate.stl")
-    cq.exporters.export(build_bottom_cutout_plate(), "bot_plate.stl")
-    cq.exporters.export(build_side_cutout_plate(), "side_plate.stl")
-    print("Done!")
+    cq.exporters.export(build_top_cutout_plate(), "connector_plate_116_40.stl")
+    cq.exporters.export(build_bottom_cutout_plate(), "connector_plate_116_40.stl")
+    cq.exporters.export(build_side_cutout_plate(), "connector_plate_side_216_40.stl")
