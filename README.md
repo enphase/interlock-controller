@@ -40,6 +40,7 @@ STLs MAY be included in the releases.
 
 We have printed our parts on a Prusa XL using a high-flow 0.4mm nozzle and set for 0.2mm STRUCTURAL or 0.2mm BREAKAWAY INTERFACE, with PETG material (and PLA breakaway where needed).
 These are expected to work on most FDM printers.
+Unless otherwise noted, most parts can be printed in an orientation that does not require support. 
 
 ### T-slot Nuts
 
