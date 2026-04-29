@@ -100,7 +100,7 @@ if __name__ == "__main__":
             rail_mounting_x=-(76 - 45) / 2,
             fillet=4.0,
         ),
-        "idec76_4545_adapter.stl",
+        "idec76_m4cs_adapter.stl",
     )
     cq.exporters.export(
         build_adapter_plate(
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             rail_mounting_x=-(76 - 45) / 2,
             fillet=4.0,
         ),
-        "idec140_4545_adapter.stl",
+        "idec140_4cs_adapter.stl",
     )
     cq.exporters.export(
         build_adapter_plate(
@@ -125,5 +125,5 @@ if __name__ == "__main__":
                 wp, locs, screw, depth=0
             ),
         ),
-        "doorsense_adapter.stl",
+        "doorsense_m4cs_adapter.stl",
     )

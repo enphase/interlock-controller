@@ -225,4 +225,4 @@ def build_tslot_nut(
 
 
 if __name__ == "__main__":
-    cq.exporters.export(build_tslot_nut(), "tslot_nut.stl")
+    cq.exporters.export(build_tslot_nut(), "tslot_nut_4545_m4.stl")
