@@ -18,7 +18,6 @@ def build_adapter_plate(
     payload_screw: MetricNut,
     *,
     payload_hole_tool: Callable = cut_countersink_hole,
-    payload_face="<Z",
     thickness: float = 3.0,
     rail_mounting_x: float = 0.0,
     fillet: float = 0.0,
