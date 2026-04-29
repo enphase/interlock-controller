@@ -16,6 +16,8 @@ This is a design for a controller box for an interlock system, including interfa
 Broadly, it takes in inputs (like E-stops, magnetic sensors, and a start button) and provides outputs (closing an external dry contact loop) and a status light.
 The design makes heavy use of 3d printing to be modular and allow iteration and design changes.
 
+![device.jpg](docs/device.jpg)
+
 
 ## General Design Rules
 
@@ -52,6 +54,11 @@ The main controller box is a COTS box (NBB-10261) with machined cutouts (rounded
 These can be purchased as a modified enclosure from Bud (with additional lead-time and $450 minimum order), through one of their distributors.
 Alternatively, these can be machined (**not easily! needs special fixturing!**) on a manual mill and a 3/4" or 10mm end mill.
 
+![box-slot.jpg](docs/box-slot.jpg)
+
+Previously, this was two 116x40mm R10mm slots (top and bottom) and a 216x40mm R10mm slot (side), with M3 holes on a 124x32mm and 224x32mm pattern, respectively.
+Newer version will have 116x40mm R10mm slots on three sides, with M3 holes on a 124x32mm pattern.
+
 [connector_plate.py](connector_plate.py) generates the connector plates to fit into the cutouts.
 These hold a M3 nut and have connector cutouts for eg, M12 connectors.
 
@@ -67,7 +74,9 @@ See [design.md](design.md) for the electronics inside the box.
 
 ### Control Boxes
 
-Human interface boxes (like for e-stop and pushbutton switches) use IDEC boxes like FB1W-111Y and FB2W-211Z, which are mounted to the T-slot framing using adapter plates.
+Human interface boxes (like for e-stop and pushbutton ueswitches) use IDEC boxes like FB1W-111Y and FB2W-211Z, which are mounted to the T-slot framing using adapter plates.
+
+![idec-connector.jpg](docs/idec-connector.jpg)
 
 These have a 21.3mm punchout, which is too large for M12 connectors.
 [idec_fb_m12_adapter.FCStd](idec_fb_m12_adapter.FCStd) and [idec_fb_m12_washer.FCStd](idec_fb_m12_washer.FCStd) "sandwich" the M12 connector to adapt it to the larger punchout.
