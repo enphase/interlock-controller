@@ -52,7 +52,7 @@ These are parameterized for 4545 metric T-slot framing.
 
 The main controller box is a COTS box (NBB-10261) with machined cutouts (rounded rectangle + 4 M3 mounting holes) for 3d printed panels to fit connectors.
 These can be purchased as a modified enclosure from Bud (with additional lead-time and $450 minimum order), through one of their distributors.
-Alternatively, these can be machined (**not easily! needs special fixturing!**) on a manual mill and a 3/4" or 10mm end mill.
+Alternatively, these can be machined (**not easily! needs special fixturing!**) on a manual mill and a 3/4" or 20mm end mill.
 
 ![box-slot.jpg](docs/box-slot.jpg)
 
