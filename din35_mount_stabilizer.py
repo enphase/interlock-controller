@@ -11,6 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+from pathlib import Path
 
 import cadquery as cq
 
@@ -49,4 +50,5 @@ def build_din35_stabilizer() -> cq.Workplane:
 
 
 if __name__ == "__main__":
-    cq.exporters.export(build_din35_stabilizer(), "din35_stabilizer.stl")
+    Path("generated").mkdir(parents=True, exist_ok=True)
+    cq.exporters.export(build_din35_stabilizer(), "generated/din35_stabilizer.stl")

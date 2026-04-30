@@ -13,6 +13,8 @@
 #    limitations under the License.
 
 import math
+from pathlib import Path
+
 import cadquery as cq
 from typing import NamedTuple
 
@@ -225,4 +227,5 @@ def build_tslot_nut(
 
 
 if __name__ == "__main__":
-    cq.exporters.export(build_tslot_nut(), "tslot_nut_4545_m4.stl")
+    Path("generated").mkdir(parents=True, exist_ok=True)
+    cq.exporters.export(build_tslot_nut(), "generated/tslot_nut_4545_m4.stl")

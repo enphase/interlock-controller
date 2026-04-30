@@ -11,7 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-
+from pathlib import Path
 from typing import List, Tuple, Callable
 
 import cadquery as cq
@@ -91,6 +91,7 @@ def build_adapter_plate(
 
 
 if __name__ == "__main__":
+    Path("generated").mkdir(parents=True, exist_ok=True)
     cq.exporters.export(
         build_adapter_plate(
             76.0,
@@ -100,7 +101,7 @@ if __name__ == "__main__":
             rail_mounting_x=-(76 - 45) / 2,
             fillet=4.0,
         ),
-        "idec76_m4cs_adapter.stl",
+        "generated/adapter_idec76_m4cs.stl",
     )
     cq.exporters.export(
         build_adapter_plate(
@@ -111,7 +112,7 @@ if __name__ == "__main__":
             rail_mounting_x=-(76 - 45) / 2,
             fillet=4.0,
         ),
-        "idec140_4cs_adapter.stl",
+        "generated/adapter_idec140_m4cs.stl",
     )
     cq.exporters.export(
         build_adapter_plate(
@@ -125,5 +126,5 @@ if __name__ == "__main__":
                 wp, locs, screw, depth=0
             ),
         ),
-        "doorsense_m4cs_adapter.stl",
+        "generated/adapter_doorsense_m4cs.stl",
     )

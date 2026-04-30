@@ -11,6 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+from pathlib import Path
 
 import cadquery as cq
 
@@ -274,6 +275,13 @@ def build_side_cutout_plate() -> cq.Workplane:
 
 # --- Export ---
 if __name__ == "__main__":
-    cq.exporters.export(build_top_cutout_plate(), "connector_plate_top_116_40.stl")
-    cq.exporters.export(build_bottom_cutout_plate(), "connector_plate_bottom_116_40.stl")
-    cq.exporters.export(build_side_cutout_plate(), "connector_plate_side_216_40.stl")
+    Path("generated").mkdir(parents=True, exist_ok=True)
+    cq.exporters.export(
+        build_top_cutout_plate(), "generated/connector_plate_top_116_40.stl"
+    )
+    cq.exporters.export(
+        build_bottom_cutout_plate(), "generated/connector_plate_bottom_116_40.stl"
+    )
+    cq.exporters.export(
+        build_side_cutout_plate(), "generated/connector_plate_side_216_40.stl"
+    )
