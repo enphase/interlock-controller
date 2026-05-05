@@ -40,7 +40,7 @@ def cut_m12_connector_holes(
     res = (
         res.copyWorkplane(wp)
         .pushPoints(locations)
-        .circle(PANEL_CUTOUT_DIA / 2 + tol + 2)
+        .circle(PANEL_CUTOUT_DIA / 2 + tol + 1.0)
         .cutBlind(-2.0, taper=45)
     )
 

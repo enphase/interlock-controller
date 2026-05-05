@@ -15,7 +15,7 @@ from pathlib import Path
 
 import cadquery as cq
 
-from cad_lib.power_entry import cut_719w_power_entry
+from cad_lib.power_entry import cut_719w_power_entry, cut_barrel_jack
 from cad_lib.connectors import cut_m12_connector_holes
 from cad_lib.fasteners import M3_NUT, cut_hex_nut_pocket
 from cad_lib.indicators import cut_tower_light_mounting
@@ -188,7 +188,7 @@ def build_bottom_cutout_plate() -> cq.Workplane:
     ]
 
     # AC Power Entry Module
-    power_locations = [(cutout_length / 2 - 25.0, 0)]
+    power_locations = [(cutout_length / 2 - M12_CONNECTOR_SPACING / 2, 0)]
 
     plate = build_base_plate(
         length=cutout_length,
@@ -203,14 +203,7 @@ def build_bottom_cutout_plate() -> cq.Workplane:
     # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
-    # 6. Cut the 719W AC Power Entry Module cutout
-    plate = cut_719w_power_entry(
-        plate.faces("<Z"),
-        power_locations,
-        HEX_NUT,
-        depth=NUT_DEPTH,
-        chamfer=0.5,
-    )
+    plate = cut_barrel_jack(plate.faces("<Z"), power_locations)
 
     return plate
 

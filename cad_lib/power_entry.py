@@ -16,11 +16,6 @@ import cadquery as cq
 from typing import List, Tuple
 from .fasteners import MetricNut, cut_hex_nut_pocket
 
-PANEL_CUTOUT_WIDTH = 27.3
-PANEL_CUTOUT_HEIGHT = 31.4
-PANEL_CUTOUT_RADIUS = 1.0
-HOLE_SPACING = 36.0
-
 
 def cut_719w_power_entry(
     wp: cq.Workplane,
@@ -34,6 +29,11 @@ def cut_719w_power_entry(
     """
     Cuts the panel cutout for the 719W-00/02 AC power entry module.
     """
+    PANEL_CUTOUT_WIDTH = 27.3
+    PANEL_CUTOUT_HEIGHT = 31.4
+    PANEL_CUTOUT_RADIUS = 1.0
+    HOLE_SPACING = 36.0
+
     sketch = (
         cq.Sketch()
         .rect(PANEL_CUTOUT_WIDTH + tol * 2, PANEL_CUTOUT_HEIGHT + tol * 2)
@@ -73,3 +73,19 @@ def cut_719w_power_entry(
     )
 
     return res
+
+
+def cut_barrel_jack(
+    wp: cq.Workplane, locations: List[Tuple[float, float]], *, tol: float = 0.0
+) -> cq.Workplane:
+    """
+    Cuts a 11mm hole for panel-mount barrel jacks, with a 12.5mm flange and 14mm metric nut.
+    """
+    BARREL_JACK_DIA = 11.0
+
+    return (
+        wp.copyWorkplane(wp)
+        .pushPoints(locations)
+        .circle(BARREL_JACK_DIA / 2 + tol * 2)
+        .cutBlind(until="next")
+    )
