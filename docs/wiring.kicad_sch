@@ -5,10 +5,9 @@
 	(uuid "1ff6de51-8261-4e18-9b9b-4dc4524223f8")
 	(paper "A4")
 	(lib_symbols
-		(symbol "Connector_Generic:Conn_01x02"
+		(symbol "Connector:Barrel_Jack"
 			(pin_names
 				(offset 1.016)
-				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -16,7 +15,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "J"
-				(at 0 2.54 0)
+				(at 0 5.334 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -25,7 +24,7 @@
 					)
 				)
 			)
-			(property "Value" "Conn_01x02"
+			(property "Value" "Barrel_Jack"
 				(at 0 -5.08 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -36,7 +35,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at 0 0 0)
+				(at 1.27 -1.016 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -47,6 +46,17 @@
 				)
 			)
 			(property "Datasheet" ""
+				(at 1.27 -1.016 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "DC Barrel Jack"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -57,7 +67,7 @@
 					)
 				)
 			)
-			(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(property "ki_keywords" "DC power barrel jack connector"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -68,7 +78,7 @@
 					)
 				)
 			)
-			(property "ki_keywords" "connector"
+			(property "ki_fp_filters" "BarrelJack*"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -79,21 +89,10 @@
 					)
 				)
 			)
-			(property "ki_fp_filters" "Connector*:*_1x??_*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "Conn_01x02_1_1"
+			(symbol "Barrel_Jack_0_1"
 				(rectangle
-					(start -1.27 1.27)
-					(end 1.27 -3.81)
+					(start -5.08 3.81)
+					(end 5.08 -3.81)
 					(stroke
 						(width 0.254)
 						(type default)
@@ -102,32 +101,71 @@
 						(type background)
 					)
 				)
-				(rectangle
-					(start -1.27 0.127)
-					(end 0 -0.127)
+				(polyline
+					(pts
+						(xy -3.81 -2.54) (xy -2.54 -2.54) (xy -1.27 -1.27) (xy 0 -2.54) (xy 2.54 -2.54) (xy 5.08 -2.54)
+					)
 					(stroke
-						(width 0.1524)
+						(width 0.254)
 						(type default)
 					)
 					(fill
 						(type none)
 					)
 				)
-				(rectangle
-					(start -1.27 -2.413)
-					(end 0 -2.667)
+				(arc
+					(start -3.302 1.905)
+					(mid -3.9343 2.54)
+					(end -3.302 3.175)
 					(stroke
-						(width 0.1524)
+						(width 0.254)
 						(type default)
 					)
 					(fill
 						(type none)
 					)
 				)
+				(arc
+					(start -3.302 1.905)
+					(mid -3.9343 2.54)
+					(end -3.302 3.175)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 3.683 3.175)
+					(end -3.302 1.905)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 5.08 2.54) (xy 3.81 2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Barrel_Jack_1_1"
 				(pin passive line
-					(at -5.08 0 0)
-					(length 3.81)
-					(name "Pin_1"
+					(at 7.62 2.54 180)
+					(length 2.54)
+					(name ""
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -143,9 +181,9 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 -2.54 0)
-					(length 3.81)
-					(name "Pin_2"
+					(at 7.62 -2.54 180)
+					(length 2.54)
+					(name ""
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1922,7 +1960,7 @@
 	)
 	(text "Blue"
 		(exclude_from_sim no)
-		(at 32.258 35.814 0)
+		(at 32.258 33.274 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2744,7 +2782,7 @@
 	)
 	(wire
 		(pts
-			(xy 25.4 35.56) (xy 29.21 35.56)
+			(xy 25.4 33.02) (xy 29.21 33.02)
 		)
 		(stroke
 			(width 0)
@@ -3749,7 +3787,7 @@
 	)
 	(symbol
 		(lib_id "power:+24V")
-		(at 29.21 35.56 0)
+		(at 29.21 33.02 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -3760,7 +3798,7 @@
 		(fields_autoplaced yes)
 		(uuid "38d0c049-d720-4c6d-8aa5-d6e1aa489a82")
 		(property "Reference" "#PWR01"
-			(at 29.21 39.37 0)
+			(at 29.21 36.83 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3771,7 +3809,7 @@
 			)
 		)
 		(property "Value" "+24V"
-			(at 29.21 30.48 0)
+			(at 29.21 27.94 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -3781,7 +3819,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 29.21 35.56 0)
+			(at 29.21 33.02 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3792,7 +3830,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 29.21 35.56 0)
+			(at 29.21 33.02 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3803,7 +3841,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+24V\""
-			(at 29.21 35.56 0)
+			(at 29.21 33.02 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5242,6 +5280,86 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector:Barrel_Jack")
+		(at 17.78 35.56 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "971b35f4-16f4-49a8-a864-824ae794f0bc")
+		(property "Reference" "J8"
+			(at 17.78 26.67 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Barrel_Jack"
+			(at 17.78 29.21 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 19.05 36.576 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 19.05 36.576 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "DC Barrel Jack"
+			(at 17.78 35.56 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "55ade56f-6779-4272-a78b-413e2c03b34c")
+		)
+		(pin "1"
+			(uuid "b4f99198-94e5-4d91-a82e-82fffcf99b8f")
+		)
+		(instances
+			(project "wiring"
+				(path "/1ff6de51-8261-4e18-9b9b-4dc4524223f8"
+					(reference "J8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+24V")
 		(at 88.9 50.8 270)
 		(unit 1)
@@ -6210,86 +6328,6 @@
 			(project "wiring"
 				(path "/1ff6de51-8261-4e18-9b9b-4dc4524223f8"
 					(reference "#PWR034")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector_Generic:Conn_01x02")
-		(at 20.32 35.56 0)
-		(mirror y)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "dd6eb683-5476-4a27-99dc-86a891b0338d")
-		(property "Reference" "J18"
-			(at 20.574 30.734 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Barrel Jack"
-			(at 20.32 33.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 20.32 35.56 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 20.32 35.56 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 20.32 35.56 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "25f3f35c-3e40-45d6-9fb6-48c3ab0c16b8")
-		)
-		(pin "2"
-			(uuid "d2fb1298-4b3c-42eb-98ed-63810e6a63bf")
-		)
-		(instances
-			(project "wiring"
-				(path "/1ff6de51-8261-4e18-9b9b-4dc4524223f8"
-					(reference "J18")
 					(unit 1)
 				)
 			)
