@@ -56,6 +56,14 @@ def build_box_machining_fixture(
     if infill_height <= 0:
         return layer0
 
+    # Bottom face above layer0 + top cap
+    bottom_cap = (
+        cq.Workplane("XY")
+        .workplane(offset=layer0_height)
+        .rect(width, length)
+        .extrude(thickness)
+    )
+
     # Bottom plate above layer0
     infill_base_z = layer0_height + thickness
 
@@ -78,6 +86,14 @@ def build_box_machining_fixture(
         y = -length / 2 + i * (length / infill_grid)
         infill_sketch = infill_sketch.push([(0, y)]).rect(width, thickness)
 
+    # X diagonal supports
+    diag_length = math.sqrt(width**2 + length**2) - math.sqrt(thickness**2)
+    diag_angle = math.degrees(math.atan2(length, width))
+    for angle in [diag_angle, -diag_angle]:
+        infill_sketch = infill_sketch.push([(0, 0)]).rect(
+            diag_length, thickness, angle=angle
+        )
+
     infill_sketch = infill_sketch.clean()
 
     infill = (
@@ -87,36 +103,6 @@ def build_box_machining_fixture(
         .extrude(infill_height)
     )
 
-    # X diagonal supports
-    # Diagonal from (-width/2, -length/2) to (width/2, length/2)
-    diag_length = math.sqrt(width**2 + length**2)
-    diag_angle = math.degrees(math.atan2(length, width))
-
-    for angle in [diag_angle, -diag_angle]:
-        diagonal = (
-            cq.Workplane("XY")
-            .workplane(offset=infill_base_z)
-            .rect(diag_length, thickness)
-            .extrude(infill_height)
-        )
-        diagonal = diagonal.rotate((0, 0, 0), (0, 0, 1), angle)
-        # Clip to bounding box
-        clip_box = (
-            cq.Workplane("XY")
-            .workplane(offset=infill_base_z)
-            .rect(width, length)
-            .extrude(infill_height)
-        )
-        diagonal = diagonal.intersect(clip_box)
-        infill = infill.union(diagonal)
-
-    # Bottom face above layer0 + top cap
-    bottom_cap = (
-        cq.Workplane("XY")
-        .workplane(offset=layer0_height)
-        .rect(width, length)
-        .extrude(thickness)
-    )
     top_cap = (
         cq.Workplane("XY")
         .workplane(offset=actual_height - thickness)
@@ -133,6 +119,33 @@ def layer0_cutouts_125_125(wp: cq.Workplane) -> cq.Sketch:
     CENTER_BOSS_DIAMETER = 20.0
     # threaded bosses in a + pattern, with this spacing between centers
     THREADED_BOSS_DIAMETER = 14.0
+    THREADED_BOSS_SPACING = 100.0
+    # corner bosses in an x pattern, with this x and y spacing between centers
+    CORNER_BOSS_DIAMETER = 10.0
+    CORNER_BOSS_SPACING = 110.0
+
+    s = THREADED_BOSS_SPACING / 2
+    c = CORNER_BOSS_SPACING / 2
+
+    sketch = (
+        cq.Sketch()
+        # Center boss
+        .circle(CENTER_BOSS_DIAMETER / 2)
+        # Threaded bosses in + pattern
+        .reset()
+        .push([(s, 0), (-s, 0), (0, s), (0, -s)])
+        .circle(THREADED_BOSS_DIAMETER / 2)
+        # Corner bosses in X pattern
+        .reset()
+        .push([(c, c), (c, -c), (-c, c), (-c, -c)])
+        .circle(CORNER_BOSS_DIAMETER / 2)
+    )
+    return sketch
+
+
+def layer0_cutouts_125_125_ext(wp: cq.Workplane) -> cq.Sketch:
+    # threaded bosses in a + pattern, with this spacing between centers
+    THREADED_BOSS_DIAMETER = 14.0
     THREADED_BOSS_SPACING = 110.6
     # corner bosses in an x pattern, with this x and y spacing between centers
     CORNER_BOSS_DIAMETER = 10.0
@@ -143,8 +156,6 @@ def layer0_cutouts_125_125(wp: cq.Workplane) -> cq.Sketch:
 
     sketch = (
         cq.Sketch()
-        # Center boss
-        .circle(CENTER_BOSS_DIAMETER / 2)
         # Threaded bosses in + pattern
         .reset()
         .push([(s, 0), (-s, 0), (0, s), (0, -s)])
@@ -167,7 +178,7 @@ if __name__ == "__main__":
     )
     cq.exporters.export(
         build_box_machining_fixture(
-            125.0, 125.0, 0.0, layer0_cutouts_125_125, 3.0, thickness=3.0
+            125.0, 125.0, 0.0, layer0_cutouts_125_125_ext, 3.0, thickness=3.0
         ),
         "generated/fixture_relay_enclosure_plate.stl",
     )
