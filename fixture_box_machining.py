@@ -26,7 +26,7 @@ def build_box_machining_fixture(
     layer0_cutouts: Callable[[cq.Workplane], cq.Sketch],
     layer0_height: float,
     thickness: float = 2.0,
-    infill_grid: int = 4,
+    infill_grid: int = 3,
 ) -> cq.Workplane:
     """Creates a semi-hollow box of total width x length x height.
     Of that total height, the layer0_height of it has cutouts defined as layer0_cutouts, eg for bosses.
@@ -121,8 +121,8 @@ def layer0_cutouts_125_125(wp: cq.Workplane) -> cq.Sketch:
     THREADED_BOSS_DIAMETER = 14.0
     THREADED_BOSS_SPACING = 100.0
     # corner bosses in an x pattern, with this x and y spacing between centers
-    CORNER_BOSS_DIAMETER = 10.0
-    CORNER_BOSS_SPACING = 110.0
+    CORNER_BOSS_DIAMETER = 14.0
+    CORNER_BOSS_SPACING = 116.0
 
     s = THREADED_BOSS_SPACING / 2
     c = CORNER_BOSS_SPACING / 2
@@ -170,15 +170,12 @@ def layer0_cutouts_125_125_ext(wp: cq.Workplane) -> cq.Sketch:
 
 if __name__ == "__main__":
     Path("generated").mkdir(parents=True, exist_ok=True)
+    # 73mm total height, 8mm thick layer0
     cq.exporters.export(
-        build_box_machining_fixture(
-            125.0, 125.0, 73.0, layer0_cutouts_125_125, 8.0, thickness=3.0
-        ),
+        build_box_machining_fixture(125.0, 125.0, 73.0, layer0_cutouts_125_125, 8.0),
         "generated/fixture_relay_enclosure.stl",
     )
     cq.exporters.export(
-        build_box_machining_fixture(
-            125.0, 125.0, 0.0, layer0_cutouts_125_125_ext, 3.0, thickness=3.0
-        ),
+        build_box_machining_fixture(125.0, 125.0, 0.0, layer0_cutouts_125_125_ext, 3.0),
         "generated/fixture_relay_enclosure_plate.stl",
     )
