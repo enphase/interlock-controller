@@ -25,7 +25,7 @@ def build_box_machining_fixture(
     height: float,
     layer0_cutouts: Callable[[cq.Workplane], cq.Sketch],
     layer0_height: float,
-    thickness: float = 3.0,
+    thickness: float = 2.0,
     infill_grid: int = 4,
 ) -> cq.Workplane:
     """Creates a semi-hollow box of total width x length x height.
@@ -52,9 +52,12 @@ def build_box_machining_fixture(
         .cutBlind(-layer0_height)
     )
 
-    infill_height = actual_height - layer0_height - thickness
+    infill_height = actual_height - layer0_height - 2 * thickness
     if infill_height <= 0:
         return layer0
+
+    # Bottom plate above layer0
+    infill_base_z = layer0_height + thickness
 
     # Infill structure: outer walls + grid + X diagonal, all of `thickness`
     # Build as a 2D sketch and extrude
@@ -79,7 +82,7 @@ def build_box_machining_fixture(
 
     infill = (
         cq.Workplane("XY")
-        .workplane(offset=layer0_height)
+        .workplane(offset=infill_base_z)
         .placeSketch(infill_sketch)
         .extrude(infill_height)
     )
@@ -92,7 +95,7 @@ def build_box_machining_fixture(
     for angle in [diag_angle, -diag_angle]:
         diagonal = (
             cq.Workplane("XY")
-            .workplane(offset=layer0_height)
+            .workplane(offset=infill_base_z)
             .rect(diag_length, thickness)
             .extrude(infill_height)
         )
@@ -100,14 +103,20 @@ def build_box_machining_fixture(
         # Clip to bounding box
         clip_box = (
             cq.Workplane("XY")
-            .workplane(offset=layer0_height)
+            .workplane(offset=infill_base_z)
             .rect(width, length)
             .extrude(infill_height)
         )
         diagonal = diagonal.intersect(clip_box)
         infill = infill.union(diagonal)
 
-    # Top cap
+    # Bottom face above layer0 + top cap
+    bottom_cap = (
+        cq.Workplane("XY")
+        .workplane(offset=layer0_height)
+        .rect(width, length)
+        .extrude(thickness)
+    )
     top_cap = (
         cq.Workplane("XY")
         .workplane(offset=actual_height - thickness)
@@ -115,7 +124,7 @@ def build_box_machining_fixture(
         .extrude(thickness)
     )
 
-    return layer0.union(infill).union(top_cap)
+    return layer0.union(bottom_cap).union(infill).union(top_cap)
 
 
 def layer0_cutouts_125_125(wp: cq.Workplane) -> cq.Sketch:
