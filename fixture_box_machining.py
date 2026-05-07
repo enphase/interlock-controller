@@ -172,7 +172,7 @@ if __name__ == "__main__":
     Path("generated").mkdir(parents=True, exist_ok=True)
     # 73mm total height, 8mm thick layer0
     cq.exporters.export(
-        build_box_machining_fixture(125.0, 125.0, 73.0, layer0_cutouts_125_125, 8.0),
+        build_box_machining_fixture(125.0, 125.0, 75.0, layer0_cutouts_125_125, 8.0),
         "generated/fixture_relay_enclosure.stl",
     )
     cq.exporters.export(
