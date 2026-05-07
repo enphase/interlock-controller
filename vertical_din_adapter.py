@@ -54,14 +54,14 @@ def build_vertical_din_bracket() -> cq.Workplane:
     s = BASE_SCREW_SPACING / 2
     base_screw_locations = [(s, 0), (-s, 0), (0, s), (0, -s)]
     base = cut_countersink_hole(
-        base.faces("<Z").workplane(), base_screw_locations, BASE_SCREW
+        base.faces(">Z").workplane(), base_screw_locations, BASE_SCREW
     )
 
     # DIN plate (vertical, XZ plane, at +Y edge of base)
     # Position it at y = BASE_LENGTH/2, extending from z=BASE_THICKNESS upward
     din_plate = (
         cq.Workplane("XZ")
-        .workplane(offset=BASE_LENGTH / 2)
+        .workplane(offset=BASE_LENGTH / 2 - DIN_BASE_THICKNESS)
         .center(0, DIN_BASE_HEIGHT / 2 + BASE_THICKNESS)
         .rect(DIN_BASE_WIDTH, DIN_BASE_HEIGHT)
         .extrude(DIN_BASE_THICKNESS)
@@ -73,10 +73,10 @@ def build_vertical_din_bracket() -> cq.Workplane:
     din_screw_spacing = DIN_BASE_SCREW_SPACING / 2
     din_screw_locations = [(0, din_screw_spacing), (0, -din_screw_spacing)]
     din_plate = cut_hex_nut_pocket(
-        din_plate.faces("<Y").workplane(),
+        din_plate.faces(">Y").workplane(),
         din_screw_locations,
         DIN_BASE_SCREW,
-        depth=DIN_BASE_THICKNESS,
+        depth=DIN_BASE_THICKNESS - DIN_BASE_SCREW.nut_thickness,
     )
 
     # Union base and DIN plate
@@ -84,18 +84,23 @@ def build_vertical_din_bracket() -> cq.Workplane:
 
     # Add rounded fillet supports as extruded arcs
     # Create a quarter-circle profile and extrude it along X at both edges
+    # Fillets go on the back side (interior), curving from vertical plate down to horizontal base
     for x_sign in [-1, 1]:
         # Start position for the fillet (inward from edge)
         x_start = x_sign * (DIN_BASE_WIDTH / 2 - DIN_BASE_FILLET_THICKNESS)
-        
+
         # Create quarter-circle arc in YZ plane
+        # Arc from (BASE_LENGTH/2, BASE_THICKNESS + radius) down and back to (BASE_LENGTH/2 - radius, BASE_THICKNESS)
         fillet_support = (
             cq.Workplane("YZ")
             .workplane(offset=x_start)
-            .moveTo(BASE_LENGTH / 2, BASE_THICKNESS)
-            .radiusArc((BASE_LENGTH / 2 + DIN_BASE_FILLET_RADIUS, BASE_THICKNESS + DIN_BASE_FILLET_RADIUS), DIN_BASE_FILLET_RADIUS)
-            .lineTo(BASE_LENGTH / 2, BASE_THICKNESS + DIN_BASE_FILLET_RADIUS)
+            .moveTo(BASE_LENGTH / 2, BASE_THICKNESS + DIN_BASE_FILLET_RADIUS)
+            .radiusArc(
+                (BASE_LENGTH / 2 - DIN_BASE_FILLET_RADIUS, BASE_THICKNESS),
+                -DIN_BASE_FILLET_RADIUS,
+            )
             .lineTo(BASE_LENGTH / 2, BASE_THICKNESS)
+            .lineTo(BASE_LENGTH / 2, BASE_THICKNESS + DIN_BASE_FILLET_RADIUS)
             .close()
             .extrude(DIN_BASE_FILLET_THICKNESS * x_sign)
         )
