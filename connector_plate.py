@@ -266,6 +266,26 @@ def build_side_cutout_plate() -> cq.Workplane:
     return plate
 
 
+def build_relay_cutout_plate() -> cq.Workplane:
+    # for a perfect 32x32 mounting pattern
+    cutout_length = CUTOUT_WIDTH - 4 * 2 * 2
+
+    plate = build_base_plate(
+        length=cutout_length,
+        width=CUTOUT_WIDTH,
+        cutout_radius=CUTOUT_RADIUS,
+        add_cutout_emboss=True,
+        version_text=f"{VERSION}",
+    )
+
+    # 5. Cut the M12 connector holes
+    # We start from the bottom face (<Z) and cut through all downwards
+    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
+    plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), [(0.0, 0.0)])
+
+    return plate
+
+
 # --- Export ---
 if __name__ == "__main__":
     Path("generated").mkdir(parents=True, exist_ok=True)
@@ -277,4 +297,8 @@ if __name__ == "__main__":
     )
     cq.exporters.export(
         build_side_cutout_plate(), "generated/connector_plate_side_216_40.stl"
+    )
+
+    cq.exporters.export(
+        build_relay_cutout_plate(), "generated/connector_plate_relay.stl"
     )
