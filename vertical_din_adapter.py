@@ -45,7 +45,7 @@ def build_vertical_din_bracket() -> cq.Workplane:
     )
     DIN_BASE_SCREW = M4_NUT
     DIN_BASE_FILLET_THICKNESS = 3.0
-    DIN_BASE_FILLET_RADIUS = 20.0
+    DIN_BASE_FILLET_RADIUS = 30.0
 
     # Base plate (horizontal, XY plane)
     base = cq.Workplane("XY").rect(BASE_WIDTH, BASE_LENGTH).extrude(BASE_THICKNESS)
@@ -61,7 +61,7 @@ def build_vertical_din_bracket() -> cq.Workplane:
     # Position it at y = BASE_LENGTH/2, extending from z=BASE_THICKNESS upward
     din_plate = (
         cq.Workplane("XZ")
-        .workplane(offset=BASE_LENGTH / 2 - DIN_BASE_THICKNESS)
+        .workplane(offset=-BASE_LENGTH / 2)  # moves in -y for some reason
         .center(0, DIN_BASE_HEIGHT / 2 + BASE_THICKNESS)
         .rect(DIN_BASE_WIDTH, DIN_BASE_HEIGHT)
         .extrude(DIN_BASE_THICKNESS)
@@ -73,7 +73,7 @@ def build_vertical_din_bracket() -> cq.Workplane:
     din_screw_spacing = DIN_BASE_SCREW_SPACING / 2
     din_screw_locations = [(0, din_screw_spacing), (0, -din_screw_spacing)]
     din_plate = cut_hex_nut_pocket(
-        din_plate.faces(">Y").workplane(),
+        din_plate.faces("<Y").workplane(),
         din_screw_locations,
         DIN_BASE_SCREW,
         depth=DIN_BASE_THICKNESS - DIN_BASE_SCREW.nut_thickness,
@@ -84,23 +84,24 @@ def build_vertical_din_bracket() -> cq.Workplane:
 
     # Add rounded fillet supports as extruded arcs
     # Create a quarter-circle profile and extrude it along X at both edges
-    # Fillets go on the back side (interior), curving from vertical plate down to horizontal base
+    # Fillets support the DIN plate from below, curving from base up to the back of DIN plate
     for x_sign in [-1, 1]:
         # Start position for the fillet (inward from edge)
         x_start = x_sign * (DIN_BASE_WIDTH / 2 - DIN_BASE_FILLET_THICKNESS)
 
         # Create quarter-circle arc in YZ plane
-        # Arc from (BASE_LENGTH/2, BASE_THICKNESS + radius) down and back to (BASE_LENGTH/2 - radius, BASE_THICKNESS)
+        # Arc from base (y - radius, z) up and forward to DIN plate back (y, z + radius)
+        y_base = BASE_LENGTH / 2 - DIN_BASE_THICKNESS
+        z_base = BASE_THICKNESS
         fillet_support = (
             cq.Workplane("YZ")
             .workplane(offset=x_start)
-            .moveTo(BASE_LENGTH / 2, BASE_THICKNESS + DIN_BASE_FILLET_RADIUS)
+            .moveTo(y_base - DIN_BASE_FILLET_RADIUS, z_base)
             .radiusArc(
-                (BASE_LENGTH / 2 - DIN_BASE_FILLET_RADIUS, BASE_THICKNESS),
+                (y_base, z_base + DIN_BASE_FILLET_RADIUS),
                 -DIN_BASE_FILLET_RADIUS,
             )
-            .lineTo(BASE_LENGTH / 2, BASE_THICKNESS)
-            .lineTo(BASE_LENGTH / 2, BASE_THICKNESS + DIN_BASE_FILLET_RADIUS)
+            .lineTo(y_base, z_base)
             .close()
             .extrude(DIN_BASE_FILLET_THICKNESS * x_sign)
         )
