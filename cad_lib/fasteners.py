@@ -56,7 +56,7 @@ def cut_hex_nut_pocket(
     depth: float = 0.0,
     *,
     tol_clearance: float = 0.2,
-    tol_flats: float = 0.0,  # reduced tolerance for snug fit
+    tol_flats: float = -0.1,  # reduced tolerance for snug fit
     chamfer: float = 0.0,
     angle: float = 0.0,
 ):
