@@ -101,6 +101,7 @@ def build_tslot_mounting_plate(
     height: float,
     *,
     thickness: float = 3.0,
+    clearance: float = 0.2,
 ) -> cq.Workplane:
     """Generates a mounting plate of width x height, symmetric around the origin.
     The mounting hole is a countersunk hole for screw, at the origin, inserted from -Z.
@@ -123,7 +124,11 @@ def build_tslot_mounting_plate(
     )
 
     # Anti-rotation tab: slot_width x height in XY, from Z=0 to Z=+tab_z
-    tab = cq.Workplane("XY").rect(tslot_profile.slot_width, height).extrude(tab_z)
+    tab = (
+        cq.Workplane("XY")
+        .rect(tslot_profile.slot_width - clearance * 2, height)
+        .extrude(tab_z)
+    )
     base = base.union(tab)
 
     # Countersunk hole at origin, inserted from -Z face
