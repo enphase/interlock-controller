@@ -113,8 +113,6 @@ def build_tslot_mounting_plate(
     To prevent rotation, this has an extrusion the width of tslot_profile.slot_width
     and height 1/3 of the slot_depth, extending into +Z
     """
-    tab_z = tslot_profile.slot_depth / 3
-
     # Main plate body: from Z=-thickness to Z=0
     base = (
         cq.Workplane("XY")
@@ -123,11 +121,11 @@ def build_tslot_mounting_plate(
         .extrude(thickness)
     )
 
-    # Anti-rotation tab: slot_width x height in XY, from Z=0 to Z=+tab_z
+    # Anti-rotation tab: slot_width x height in XY, from Z=0 to Z=+slot_depth/3
     tab = (
         cq.Workplane("XY")
         .rect(tslot_profile.slot_width - clearance * 2, height)
-        .extrude(tab_z)
+        .extrude(tslot_profile.slot_depth / 3 - clearance)
     )
     base = base.union(tab)
 
