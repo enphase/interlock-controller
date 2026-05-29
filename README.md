@@ -87,6 +87,6 @@ Because these add thickness, the O-ring on the M12 connectors must be removed.
 Additionally, these have an anti-rotation feature, so a 1mm wide x 2mm long (radially outward) slot needs to be dremeled into the top of the punchout.
 The anti-rotation feature is triangular, the slot does not have to be completely through.
 
-[adapter_plate.py](adapter_plate.py) generates adapter plates that adapt the back of these boxes to attach to the T-slot framing.
+[tslot_mounting_plate.py](tslot_mounting_plate.py) generates adapter plates that adapt the back of these boxes to attach to the T-slot framing.
 These attach to the back of the IDEC box using M4 countersunk screws.
 You will need to tap the factory holes on the box with a M4 tap.
