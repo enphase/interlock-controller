@@ -137,7 +137,8 @@ def build_tslot_nut(
     )
     neck_nominal = box(
         -profile.slot_width / 2,
-        0.0,
+        profile.slot_depth
+        * (2 / 3),  # neck only 1/3 long to allow for a neck on the other side
         profile.slot_width / 2,
         profile.slot_depth,
     )
@@ -196,7 +197,6 @@ def build_tslot_nut(
         wp=body.faces("<Y").workplane(),
         locations=nut_locs,
         nut=nut,
-        depth=profile.slot_depth + wall,
         angle=30.0,
         chamfer=screw_entry_chamfer,
     )
