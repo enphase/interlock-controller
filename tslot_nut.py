@@ -48,6 +48,30 @@ class TSlotProfile(NamedTuple):
         """Returns the horizontal distance to inset the flange outer edges."""
         return self.track_width / 2 - self.track_bottom_halfwidth()
 
+    def inner_profile_polygon(self):
+        """Returns a Shapely polygon of the full T-slot interior including neck.
+
+        Coordinates: X centered on slot, Y=0 is the outer face of the profile, increasing inward.
+        The polygon covers the neck (y ∈ [0, slot_depth]) and the track
+        (y ∈ [slot_depth, track_depth]) with chamfered back corners.
+        """
+        from shapely.geometry import Polygon, box
+
+        hw = self.track_width / 2
+        c = self.chamfer()
+        track = Polygon(
+            [
+                (-hw, self.slot_depth),
+                (hw, self.slot_depth),
+                (hw, self.track_depth - c),
+                (hw - c, self.track_depth),
+                (-hw + c, self.track_depth),
+                (-hw, self.track_depth - c),
+            ]
+        )
+        neck = box(-self.slot_width / 2, 0, self.slot_width / 2, self.slot_depth)
+        return track | neck
+
 
 # from https://www.onlinemetals.com/en/buy/aluminum/45mm-x-45mm-light-w-10mm-slot-aluminum-t-slot-6063/pid/mp-00001401
 PROFILE_4545 = TSlotProfile(
@@ -114,7 +138,7 @@ def build_tslot_nut(
     Returns:
         CadQuery workplane with the T-slot nut body
     """
-    from shapely.geometry import Polygon, box
+    from shapely.geometry import box
 
     nut_center_z = (
         spring_height
@@ -124,38 +148,22 @@ def build_tslot_nut(
     )
     height = nut_center_z + nut.nut_hex_across_flats / 2 * math.sqrt(3) / 2 + wall
 
-    # 1. Define outer exact boundaries of the track
-    track_nominal = Polygon(
-        [
-            (-profile.track_width / 2, profile.slot_depth),
-            (profile.track_width / 2, profile.slot_depth),
-            (profile.track_width / 2, profile.track_depth - profile.chamfer()),
-            (profile.track_width / 2 - profile.chamfer(), profile.track_depth),
-            (-profile.track_width / 2 + profile.chamfer(), profile.track_depth),
-            (-profile.track_width / 2, profile.track_depth - profile.chamfer()),
-        ]
-    )
-    neck_nominal = box(
-        -profile.slot_width / 2,
-        profile.slot_depth
-        * (2 / 3),  # neck only 1/3 long to allow for a neck on the other side
-        profile.slot_width / 2,
-        profile.slot_depth,
-    )
-
+    # clamp in -Y so neck is upper third of slot, allowing a neck on the other side of the slot
+    # clamp in +Y to provide room for the spring
     flange_y_end = profile.slot_depth + wall + nut.nut_thickness
-    flange_nominal = track_nominal & box(
+    base_nominal = profile.inner_profile_polygon() & box(
         -profile.track_width / 2,
-        clearance * 2,  # starts offset to ensure flange clamps before neck bottoms out
+        profile.slot_depth * (2 / 3),
         profile.track_width / 2,
         flange_y_end,
     )
-    base_nominal = neck_nominal | flange_nominal
     base_actual = base_nominal.buffer(-clearance, join_style="bevel")
 
     # 3. Spring Arm Nominal
     # Construct spring arm by shelling the track, then restricting to the bounding box
-    track_cleared = track_nominal.buffer(-clearance, join_style="bevel")
+    track_cleared = profile.inner_profile_polygon().buffer(
+        -clearance, join_style="bevel"
+    )
     spring_shell = track_cleared - track_cleared.buffer(
         -spring_thickness, join_style="bevel"
     )
