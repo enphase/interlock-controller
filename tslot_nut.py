@@ -180,25 +180,28 @@ def build_tslot_nut(
 
     # Compile layers
     spring_actual = (base_actual - recess_cut) | spring_arm
-    # spring_actual = base_actual - recess_cut
 
-    # 6. Convert to CadQuery and extrude
-    body = cq.Workplane("XY").add(shapely_to_cq(spring_actual)).extrude(spring_height)
-    body = body.union(
+    # Create body first
+    body = (
         cq.Workplane("XY")
         .add(shapely_to_cq(base_actual))
         .extrude(height - spring_height)
         .translate((0, 0, spring_height))
     )
 
-    # 7. Cut Hex Nut Pocket
+    # Apply hex pocket while +Y is the right face
     nut_locs = [(0, nut_center_z)]
     body = cut_hex_nut_pocket(
-        wp=body.faces("<Y").workplane(),
+        wp=body.faces(">Y").workplane(),
         locations=nut_locs,
         nut=nut,
         angle=30.0,
         chamfer=screw_entry_chamfer,
+    )
+
+    # Add spring arm
+    body = body.union(
+        cq.Workplane("XY").add(shapely_to_cq(spring_actual)).extrude(spring_height)
     )
 
     # 8. Interference Nub
