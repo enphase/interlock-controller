@@ -148,23 +148,23 @@ def build_tslot_nut(
     )
     height = nut_center_z + nut.nut_hex_across_flats / 2 * math.sqrt(3) / 2 + wall
 
+    profile_cleared = profile.inner_profile_polygon().buffer(
+        -clearance, join_style="bevel"
+    )
+
     # clamp in -Y so neck is upper third of slot, allowing a neck on the other side of the slot
     # clamp in +Y to provide room for the spring
     flange_y_end = profile.slot_depth + wall + nut.nut_thickness
-    base_nominal = profile.inner_profile_polygon() & box(
+    base = profile_cleared & box(
         -profile.track_width / 2,
         profile.slot_depth * (2 / 3),
         profile.track_width / 2,
         flange_y_end,
     )
-    base_actual = base_nominal.buffer(-clearance, join_style="bevel")
 
     # 3. Spring Arm Nominal
     # Construct spring arm by shelling the track, then restricting to the bounding box
-    track_cleared = profile.inner_profile_polygon().buffer(
-        -clearance, join_style="bevel"
-    )
-    spring_shell = track_cleared - track_cleared.buffer(
+    spring_shell = profile_cleared - profile_cleared.buffer(
         -spring_thickness, join_style="bevel"
     )
     spring_arm = spring_shell & box(
@@ -187,12 +187,12 @@ def build_tslot_nut(
     )
 
     # Compile layers
-    spring_actual = (base_actual - recess_cut) | spring_arm
+    spring_actual = (base - recess_cut) | spring_arm
 
     # Create body first
     body = (
         cq.Workplane("XY")
-        .add(shapely_to_cq(base_actual))
+        .add(shapely_to_cq(base))
         .extrude(height - spring_height)
         .translate((0, 0, spring_height))
     )
@@ -203,7 +203,7 @@ def build_tslot_nut(
         wp=body.faces(">Y").workplane(),
         locations=nut_locs,
         nut=nut,
-        angle=30.0,
+        angle=30,
         chamfer=screw_entry_chamfer,
     )
 
@@ -237,6 +237,112 @@ def build_tslot_nut(
     return body
 
 
+def build_dropin_tslot_nut(
+    profile: TSlotProfile = PROFILE_4545,
+    nut: MetricNut = M4_NUT,
+    clearance: float = 0.2,
+    wall: float = 2.0,
+    screw_entry_chamfer: float = 0.5,
+) -> cq.Workplane:
+    """Build a drop-in rotary T-slot nut.
+
+    Dropped into the T-slot opening edge-on (Z-height = slot_width), then rotated
+    90 degrees to lock behind the flanges.
+
+    The body is built from four quadrants split at X=0 and Z=0, all using the
+    actual inner profile polygon as the XY cross-section:
+      - +X,+Z: +X half of profile extruded straight to +hz
+      - -X,-Z: -X half of profile extruded straight to -hz
+      - +X,-Z: full profile revolved 90° around +Y at x=0, clipped to z∈[-hz,0]
+      - -X,+Z: full profile revolved 90° around +Y at x=0, clipped to z∈[0,hz]
+               (same revolve as above, opposite clip — 180° rotationally symmetric)
+
+    Coordinate axes match build_tslot_nut:
+      - Y=0 at the outer face of the T-slot profile, increasing into the slot.
+      - X centered on the slot.
+      - Z symmetric about Z=0, hex pocket at Z=0.
+
+    Args:
+        profile: T-slot profile dimensions
+        nut: Metric hex nut specifications
+        clearance: Uniform clearance to subtract from profile dimensions for fit
+        wall: Minimum wall thickness around nut pocket
+        screw_entry_chamfer: Chamfer size for screw entry hole
+
+    Returns:
+        CadQuery workplane with the drop-in T-slot nut body
+    """
+    from shapely.geometry import box as shapely_box
+
+    # XY cross-section: inner profile (neck + track) clamped to the nut's Y extent:
+    #   -Y: neck upper third only (slot_depth*2/3), matching build_tslot_nut
+    #   +Y: slot_depth + wall + nut_thickness, so flange depth matches the non-drop-in nut
+    y_max = profile.slot_depth + wall + nut.nut_thickness
+    cross_section = profile.inner_profile_polygon().buffer(
+        -clearance, join_style="bevel"
+    ) & shapely_box(
+        -profile.track_width / 2,
+        profile.slot_depth * (2 / 3),
+        profile.track_width / 2,
+        y_max,
+    )
+
+    bb = cross_section.bounds  # (xmin, ymin, xmax, ymax)
+    hx = bb[2]  # max x of shrunk profile
+    hz = profile.slot_width / 2 - clearance  # half-z
+
+    # +X half and -X half profiles (split at x=0)
+    half_pos_x = cross_section & shapely_box(0, bb[1], hx, bb[3])
+    half_neg_x = cross_section & shapely_box(-hx, bb[1], 0, bb[3])
+
+    # Straight extrusions: +X half goes +Z, -X half goes -Z
+    q_pp = cq.Workplane("XY").add(shapely_to_cq(half_pos_x)).extrude(hz)
+    q_nn = cq.Workplane("XY").add(shapely_to_cq(half_neg_x)).extrude(-hz)
+
+    # Curved quadrants: revolve the half-profile 90° around +Y at x=0, then clip to ±hz in Z.
+    # The profile must be entirely on one side of the revolve axis (x≥0 or x≤0).
+    # +X half revolved 90° around +Y sweeps: +X → -Z (gives +X,-Z quadrant).
+    # -X half revolved 90° around +Y sweeps: -X → +Z (gives -X,+Z quadrant).
+    # Each revolve produces a solid spanning more than hz in Z; clip to the correct hz range.
+
+    # +X,-Z: revolve +X half
+    revolve_pos_x = (
+        cq.Workplane("XY")
+        .add(shapely_to_cq(half_pos_x))
+        .revolve(angleDegrees=90, axisStart=(0, 0), axisEnd=(0, 1))
+    )
+    # -X,+Z: revolve -X half
+    revolve_neg_x = (
+        cq.Workplane("XY")
+        .add(shapely_to_cq(half_neg_x))
+        .revolve(angleDegrees=90, axisStart=(0, 0), axisEnd=(0, 1))
+    )
+
+    # clip to Z = [-hz, hz]
+    body = q_pp.union(q_nn).union(revolve_pos_x).union(revolve_neg_x)
+    body = body.intersect(
+        cq.Workplane("XY")
+        .rect(hx * 2, y_max, centered=(True, False))
+        .extrude(hz, both=True)
+    )
+
+    # --- Cut hex nut pocket ---
+    # Screw enters from the outer face (min-Y), pocket recessed inward.
+    # Hex pocket centered at X=0, Z=0 on the <Y face.
+    body = cut_hex_nut_pocket(
+        wp=body.faces(">Y").workplane(),
+        locations=[(0, 0)],
+        nut=nut,
+        angle=30,
+        chamfer=screw_entry_chamfer,
+    )
+
+    return body
+
+
 if __name__ == "__main__":
     Path("generated").mkdir(parents=True, exist_ok=True)
     cq.exporters.export(build_tslot_nut(), "generated/tslot_nut_4545_m4.stl")
+    cq.exporters.export(
+        build_dropin_tslot_nut(), "generated/tslot_nut_dropin_4545_m4.stl"
+    )
