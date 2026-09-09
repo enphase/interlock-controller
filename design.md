@@ -93,6 +93,7 @@ Part selections:
     - 2-position grey (eg, to join two pigtail wires): 1045923 PTFIX 2X1,5 GY
   - DIN rail adapter: 1049497 PTFIX 1,5-NS35 
 
+See [the reference box description](reference-box.md) for an example layout of the control box.
 
 ## External devices
 
