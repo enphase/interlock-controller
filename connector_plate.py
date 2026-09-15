@@ -41,7 +41,7 @@ HEX_FLANGE_RADIUS = 8.0
 
 M12_CONNECTOR_SPACING = 22.0
 
-VERSION = "v1.2"
+VERSION = "v2.0"
 
 # Emboss Parameters (Extruded upwards from the inside face)
 EMBOSS_THICKNESS = 0.4
@@ -180,16 +180,6 @@ def build_base_plate(
 def build_bottom_cutout_plate() -> cq.Workplane:
     cutout_length = 116.0
 
-    # M12 Connectors
-    num_connectors = 3
-    connector_locations = [
-        (-cutout_length / 2 + M12_CONNECTOR_SPACING * (i + 0.5), 0)
-        for i in range(num_connectors)
-    ]
-
-    # AC Power Entry Module
-    power_locations = [(cutout_length / 2 - M12_CONNECTOR_SPACING / 2, 0)]
-
     plate = build_base_plate(
         length=cutout_length,
         width=CUTOUT_WIDTH,
@@ -198,11 +188,14 @@ def build_bottom_cutout_plate() -> cq.Workplane:
         version_text=f"BOT {VERSION}",
     )
 
-    # 5. Cut the M12 connector holes
-    # We start from the bottom face (<Z) and cut through all downwards
-    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
+    # 2 M12 connectors for outputs
+    connector_locations = [
+        (-cutout_length / 2 + M12_CONNECTOR_SPACING * (i + 0.5), 0) for i in range(2)
+    ]
     plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
+    # power entry
+    power_locations = [(cutout_length / 2 - M12_CONNECTOR_SPACING / 2, 0)]
     plate = cut_barrel_jack(plate.faces("<Z"), power_locations)
 
     return plate
@@ -211,16 +204,6 @@ def build_bottom_cutout_plate() -> cq.Workplane:
 def build_top_cutout_plate() -> cq.Workplane:
     cutout_length = 116.0
 
-    # M12 Connectors
-    num_connectors = 2
-    connector_locations = [
-        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0)
-        for i in range(num_connectors)
-    ]
-
-    # 5. Cut the M12 connector holes
-    # We start from the bottom face (<Z) and cut through all downwards
-    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = build_base_plate(
         length=cutout_length,
         width=CUTOUT_WIDTH,
@@ -228,8 +211,6 @@ def build_top_cutout_plate() -> cq.Workplane:
         add_cutout_emboss=True,
         version_text=f"TOP {VERSION}",
     )
-
-    plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
     plate = cut_tower_light_mounting(
         plate.faces("<Z").workplane(),
@@ -241,18 +222,8 @@ def build_top_cutout_plate() -> cq.Workplane:
 
 
 def build_side_cutout_plate() -> cq.Workplane:
-    cutout_length = 216.0
+    cutout_length = 116.0
 
-    # M12 Connectors
-    num_connectors = 4
-    connector_locations = [
-        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0)
-        for i in range(num_connectors)
-    ]
-
-    # 5. Cut the M12 connector holes
-    # We start from the bottom face (<Z) and cut through all downwards
-    # In order to place the chamfer on the exterior face (Z=0), we pass in the bottom face
     plate = build_base_plate(
         length=cutout_length,
         width=CUTOUT_WIDTH,
@@ -260,6 +231,15 @@ def build_side_cutout_plate() -> cq.Workplane:
         add_cutout_emboss=True,
         version_text=f"SIDE {VERSION}",
     )
+
+    # M12 Connectors: four on top, for interlocks
+    connector_locations = [
+        (cutout_length / 2 - M12_CONNECTOR_SPACING * (i + 0.5), 0) for i in range(4)
+    ]
+    # one on bottom, for start
+    connector_locations += [
+        (-cutout_length / 2 + M12_CONNECTOR_SPACING * (i + 0.5), 0) for i in range(1)
+    ]
 
     plate = cut_m12_connector_holes(plate.faces("<Z").workplane(), connector_locations)
 
@@ -289,15 +269,11 @@ def build_relay_cutout_plate() -> cq.Workplane:
 # --- Export ---
 if __name__ == "__main__":
     Path("generated").mkdir(parents=True, exist_ok=True)
+    cq.exporters.export(build_top_cutout_plate(), "generated/connector_plate_top.stl")
     cq.exporters.export(
-        build_top_cutout_plate(), "generated/connector_plate_top_116_40.stl"
+        build_bottom_cutout_plate(), "generated/connector_plate_bottom.stl"
     )
-    cq.exporters.export(
-        build_bottom_cutout_plate(), "generated/connector_plate_bottom_116_40.stl"
-    )
-    cq.exporters.export(
-        build_side_cutout_plate(), "generated/connector_plate_side_216_40.stl"
-    )
+    cq.exporters.export(build_side_cutout_plate(), "generated/connector_plate_side.stl")
 
     cq.exporters.export(
         build_relay_cutout_plate(), "generated/connector_plate_relay.stl"
