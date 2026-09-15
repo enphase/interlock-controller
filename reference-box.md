@@ -5,6 +5,7 @@
 - Coil and terminate unused wires (M12 5th pins)
 - The Phoenix relays we use have polarized coil pins. A1 is +V, A2 is GND. **This differs from the wiring diagram.**
 
+
 ## Top row: rails
 
 Top row:
@@ -19,6 +20,7 @@ Bottom row:
 - Orange terminal block (3-wide): +24 IC
   - The e-stop LED lines (M12 brown) are connected here
 
+
 ## Center rows: relays
 
 - Relay K2: start latch
@@ -29,6 +31,7 @@ Bottom row:
   - These should be mirror contact relays since the tower light uses the readback state
 
 Relay GNDs are daisy chained for wiring simplicity
+
 
 ## Bottom row: barrel jack breakout
 
